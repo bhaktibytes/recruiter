@@ -23,23 +23,26 @@ export default function InterviewsPage() {
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1fr_0.7fr]">
-      <section className="panel overflow-hidden">
+      <section className="panel overflow-hidden bg-[#FCFCFF] border border-[#ECEAFB] rounded-[32px] shadow-[0_8px_30px_rgba(91,79,233,0.08)]">
         <div className="border-b border-stone-200 p-5">
-          <h2 className="text-lg font-black">Interview schedule</h2>
-          <p className="mt-1 text-sm text-stone-500">Track stage, interviewer, mode, and feedback state.</p>
+          <h2 className="text-[22px] font-black tracking-tight text-[#151633]">Interview schedule</h2>
+          <p className="mt-1 text-sm text-[#6D6B8D]">Track stage, interviewer, mode, and feedback state.</p>
         </div>
         <div className="divide-y divide-stone-100">
           {interviews.map((interview) => (
-            <article key={interview.id} className="p-5">
+            <article
+  key={interview.id}
+  className="p-5 hover:bg-[#FAFAFD] transition-all duration-300"
+>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="font-black">{interview.candidateName}</h3>
+                    <h3 className="text-[20px] font-black tracking-tight text-[#151633]">{interview.candidateName}</h3>
                     <StatusBadge value={interview.status} />
                   </div>
                   <p className="mt-1 text-sm text-stone-500">{interview.jobTitle} · {interview.stage}</p>
                 </div>
-                <select className="input w-44" value={interview.status} onChange={(event) => void updateItem(interview.id, { status: event.target.value as Interview['status'] })}>
+                <select className="input w-44 rounded-2xl" value={interview.status} onChange={(event) => void updateItem(interview.id, { status: event.target.value as Interview['status'] })}>
                   <option>Scheduled</option>
                   <option>Feedback Due</option>
                   <option>Completed</option>
@@ -56,14 +59,13 @@ export default function InterviewsPage() {
         </div>
       </section>
 
-      <section className="panel h-fit p-5">
-        <h2 className="text-lg font-black">Ready to schedule</h2>
+      <section className="panel h-fit p-6 bg-[#FCFCFF] border border-[#ECEAFB] rounded-[32px] shadow-[0_8px_30px_rgba(91,79,233,0.08)]">        <h2 className="text-lg font-black">Ready to schedule</h2>
         <p className="mt-1 text-sm text-stone-500">Shortlisted and interviewing candidates can be pushed into the calendar.</p>
         <div className="mt-4 space-y-3">
           {candidates
             .filter((candidate) => ['Shortlisted', 'Interviewing'].includes(candidate.status))
             .map((candidate) => (
-              <div key={candidate.id} className="rounded-lg border border-stone-200 p-4">
+              <div key={candidate.id} className="rounded-[24px] border border-[#ECEAFB] bg-white p-5 shadow-sm hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="font-black">{candidate.name}</div>
@@ -71,7 +73,7 @@ export default function InterviewsPage() {
                   </div>
                   <StatusBadge value={candidate.status} />
                 </div>
-                <button onClick={() => void scheduleForCandidate(candidate)} className="button-secondary mt-4 w-full" type="button">
+                <button onClick={() => void scheduleForCandidate(candidate)} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ECEAFB] bg-white px-4 py-3 font-semibold text-[#151633] hover:border-[#5B4FE9] hover:text-[#5B4FE9] transition-all duration-300" type="button">
                   <CalendarPlus className="h-4 w-4" />
                   Schedule interview
                 </button>
@@ -88,7 +90,7 @@ function Info({ icon: Icon, label, value }: { icon: ElementType; label: string; 
     <div className="flex items-start gap-2">
       <Icon className="mt-0.5 h-4 w-4 text-emerald-700" />
       <div>
-        <div className="text-xs font-bold uppercase text-stone-400">{label}</div>
+        <div className="text-xs font-bold uppercase text-[#9D9AB8]">{label}</div>
         <div className="mt-1 font-semibold">{value}</div>
       </div>
     </div>

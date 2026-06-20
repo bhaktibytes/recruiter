@@ -105,12 +105,16 @@ export default function DashboardPage() {
 
 function Metric({ icon: Icon, label, value, hint }: { icon: ElementType; label: string; value: string; hint: string }) {
   return (
-    <div className="metric-card">
+    <div className="metric-card hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 border border-stone-100">
       <div className="flex items-center justify-between">
-        <div className="text-sm font-semibold text-stone-500">{label}</div>
+        <div className="text-sm font-semibold uppercase tracking-wider text-stone-500">
+  {label}
+</div>
         <Icon className="h-5 w-5 text-emerald-700" />
       </div>
-      <div className="mt-3 text-3xl font-black text-stone-950">{value}</div>
+      <div className="mt-3 text-5xl font-black text-stone-950">
+  {value}
+</div>
       <div className="mt-1 text-sm text-stone-500">{hint}</div>
     </div>
   );

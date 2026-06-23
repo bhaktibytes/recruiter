@@ -14,7 +14,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = (email: string, password: string, role: Role) => {
-    const matchingUser = seedUsers.find(
+    const localUsersStr = localStorage.getItem('recruiter_registered_users');
+    const localUsers = localUsersStr ? JSON.parse(localUsersStr) : [];
+    const allUsers = [...seedUsers, ...localUsers];
+
+    const matchingUser = allUsers.find(
       (account) => account.email === email.trim().toLowerCase() && account.password === password && account.role === role,
     );
 
@@ -34,13 +38,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   };
 
+  const signUp = (name: string, email: string, password: string, role: Role) => {
+    const localUsersStr = localStorage.getItem('recruiter_registered_users');
+    const localUsers = localUsersStr ? JSON.parse(localUsersStr) : [];
+    const allUsers = [...seedUsers, ...localUsers];
+
+    if (allUsers.some(u => u.email === email.trim().toLowerCase())) {
+      return false;
+    }
+
+    const newUser = {
+      id: `user-${Date.now()}`,
+      displayName: name,
+      email: email.trim().toLowerCase(),
+      password,
+      role
+    };
+
+    localUsers.push(newUser);
+    localStorage.setItem('recruiter_registered_users', JSON.stringify(localUsers));
+
+    const userWithoutPassword: User = {
+      id: newUser.id,
+      email: newUser.email,
+      displayName: newUser.displayName,
+      role: newUser.role,
+    };
+    setUser(userWithoutPassword);
+    localStorage.setItem('recruiter_user', JSON.stringify(userWithoutPassword));
+    return true;
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('recruiter_user');
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, signUp, logout }}>
       {children}
     </AuthContext.Provider>
   );

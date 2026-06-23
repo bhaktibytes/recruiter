@@ -4,6 +4,7 @@ import type { Role, User } from '@/types';
 export interface AuthContextType {
   user: User | null;
   login: (email: string, password: string, role: Role) => boolean;
+  signUp: (name: string, email: string, password: string, role: Role) => boolean;
   logout: () => void;
 }
 

@@ -7,12 +7,19 @@ import { Role } from '@/types';
 const roles: Role[] = ['Recruiter', 'Hiring Manager', 'Admin'];
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, signUp } = useAuth();
   const navigate = useNavigate();
   const [role, setRole] = useState<Role>('Recruiter');
   const [email, setEmail] = useState(roleCredentials.Recruiter.email);
   const [password, setPassword] = useState(roleCredentials.Recruiter.password);
   const [error, setError] = useState('');
+
+  // Sign up form states
+  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [signUpName, setSignUpName] = useState('');
+  const [signUpEmail, setSignUpEmail] = useState('');
+  const [signUpPassword, setSignUpPassword] = useState('');
+  const [signUpRole, setSignUpRole] = useState<Role>('Recruiter');
 
   const selectRole = (nextRole: Role) => {
     setRole(nextRole);
@@ -26,6 +33,20 @@ export default function LoginPage() {
     const isAuthenticated = login(email, password, role);
     if (!isAuthenticated) {
       setError('Use one of the seeded credential sets shown below.');
+      return;
+    }
+    navigate('/');
+  };
+
+  const handleSignUp = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!signUpName.trim() || !signUpEmail.trim() || !signUpPassword.trim()) {
+      setError('Please fill in all fields.');
+      return;
+    }
+    const success = signUp(signUpName, signUpEmail, signUpPassword, signUpRole);
+    if (!success) {
+      setError('Email address already registered.');
       return;
     }
     navigate('/');
@@ -48,92 +69,197 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Login Form Container Card */}
+      {/* Login / Sign Up Card */}
       <div className="bg-white border border-[#ECE8E2] rounded-2xl p-8 shadow-[0_10px_35px_-10px_rgba(21,22,51,0.04)] max-w-md w-full">
-        <form onSubmit={handleLogin} className="space-y-5">
-          <div>
-            <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
-              Email Address
-            </label>
-            <input 
-              type="email" 
-              value={email} 
-              onChange={(event) => setEmail(event.target.value)} 
-              className="input" 
-              placeholder="you@example.com"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
-              Password
-            </label>
-            <input 
-              type="password" 
-              value={password} 
-              onChange={(event) => setPassword(event.target.value)} 
-              className="input" 
-              placeholder="8+ characters"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
-              Workspace Role
-            </label>
-            <select 
-              value={role} 
-              onChange={(event) => selectRole(event.target.value as Role)} 
-              className="input cursor-pointer"
-            >
-              {roles.map((item) => (
-                <option key={item} value={item}>{item}</option>
-              ))}
-            </select>
-          </div>
-
-          {error && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50/50 px-4 py-3 text-xs font-semibold text-rose-700">
-              {error}
-            </div>
-          )}
-
-          <button 
-            type="submit" 
-            className="button-primary w-full py-3.5 mt-2 flex items-center justify-center font-bold hover:bg-[#FF6B35] transition duration-150 cursor-pointer"
+        
+        {/* Tab Switcher */}
+        <div className="flex bg-[#F2EFEA] p-1 rounded-xl mb-6">
+          <button
+            type="button"
+            onClick={() => { setIsLoginMode(true); setError(''); }}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer text-center ${
+              isLoginMode 
+                ? 'bg-white text-brand-navy shadow-sm' 
+                : 'text-stone-500 hover:text-brand-navy'
+            }`}
           >
-            Enter workspace
+            Log In
           </button>
-        </form>
-
-        <div className="relative my-6.5">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#ECE8E2]" />
-          </div>
-          <div className="relative flex justify-center text-[9px] font-bold uppercase tracking-widest folio-mono">
-            <span className="bg-white px-3 text-[#6D6B8D]">or prefill credentials</span>
-          </div>
+          <button
+            type="button"
+            onClick={() => { setIsLoginMode(false); setError(''); }}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-150 cursor-pointer text-center ${
+              !isLoginMode 
+                ? 'bg-white text-brand-navy shadow-sm' 
+                : 'text-stone-500 hover:text-brand-navy'
+            }`}
+          >
+            Sign Up
+          </button>
         </div>
 
-        {/* Clickable Quick Role Prefills */}
-        <div className="grid grid-cols-3 gap-2.5">
-          {roles.map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => selectRole(item)}
-              className={`rounded-xl border py-2.5 text-center transition duration-150 cursor-pointer ${
-                role === item 
-                  ? 'border-brand-purple bg-brand-purple/5 text-brand-purple font-bold' 
-                  : 'border-[#ECE8E2] bg-white text-stone-500 hover:bg-stone-50 hover:border-stone-300'
-              }`}
+        {!isLoginMode ? (
+          /* Sign Up Form */
+          <form onSubmit={handleSignUp} className="space-y-5">
+            <div>
+              <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
+                Full Name
+              </label>
+              <input 
+                type="text" 
+                value={signUpName} 
+                onChange={(event) => setSignUpName(event.target.value)} 
+                className="input" 
+                placeholder="your name"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
+                Email Address
+              </label>
+              <input 
+                type="email" 
+                value={signUpEmail} 
+                onChange={(event) => setSignUpEmail(event.target.value)} 
+                className="input" 
+                placeholder="you@example.com"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
+                Password
+              </label>
+              <input 
+                type="password" 
+                value={signUpPassword} 
+                onChange={(event) => setSignUpPassword(event.target.value)} 
+                className="input" 
+                placeholder="8+ characters"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
+                Workspace Role
+              </label>
+              <select 
+                value={signUpRole} 
+                onChange={(event) => setSignUpRole(event.target.value as Role)} 
+                className="input cursor-pointer"
+              >
+                {roles.map((item) => (
+                  <option key={item} value={item}>{item}</option>
+                ))}
+              </select>
+            </div>
+
+            {error && (
+              <div className="rounded-xl border border-rose-200 bg-rose-50/50 px-4 py-3 text-xs font-semibold text-rose-700">
+                {error}
+              </div>
+            )}
+
+            <button 
+              type="submit" 
+              className="button-primary w-full py-3.5 mt-2 flex items-center justify-center font-bold hover:bg-[#FF6B35] transition duration-150 cursor-pointer"
             >
-              <div className="text-[11px] font-bold tracking-tight">{item}</div>
+              Create Account
             </button>
-          ))}
-        </div>
+          </form>
+        ) : (
+          /* Log In Form */
+          <>
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div>
+                <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
+                  Email Address
+                </label>
+                <input 
+                  type="email" 
+                  value={email} 
+                  onChange={(event) => setEmail(event.target.value)} 
+                  className="input" 
+                  placeholder="you@example.com"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
+                  Password
+                </label>
+                <input 
+                  type="password" 
+                  value={password} 
+                  onChange={(event) => setPassword(event.target.value)} 
+                  className="input" 
+                  placeholder="8+ characters"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
+                  Workspace Role
+                </label>
+                <select 
+                  value={role} 
+                  onChange={(event) => selectRole(event.target.value as Role)} 
+                  className="input cursor-pointer"
+                >
+                  {roles.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+              </div>
+
+              {error && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50/50 px-4 py-3 text-xs font-semibold text-rose-700">
+                  {error}
+                </div>
+              )}
+
+              <button 
+                type="submit" 
+                className="button-primary w-full py-3.5 mt-2 flex items-center justify-center font-bold hover:bg-[#FF6B35] transition duration-150 cursor-pointer"
+              >
+                Enter workspace
+              </button>
+            </form>
+
+            <div className="relative my-6.5">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-[#ECE8E2]" />
+              </div>
+              <div className="relative flex justify-center text-[9px] font-bold uppercase tracking-widest folio-mono">
+                <span className="bg-white px-3 text-[#6D6B8D]">or prefill credentials</span>
+              </div>
+            </div>
+
+            {/* Clickable Quick Role Prefills */}
+            <div className="grid grid-cols-3 gap-2.5">
+              {roles.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => selectRole(item)}
+                  className={`rounded-xl border py-2.5 text-center transition duration-150 cursor-pointer ${
+                    role === item 
+                      ? 'border-brand-purple bg-brand-purple/5 text-brand-purple font-bold' 
+                      : 'border-[#ECE8E2] bg-white text-stone-500 hover:bg-stone-50 hover:border-stone-300'
+                  }`}
+                >
+                  <div className="text-[11px] font-bold tracking-tight">{item}</div>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

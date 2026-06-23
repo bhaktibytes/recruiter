@@ -1,26 +1,25 @@
+import { useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BriefcaseBusiness, Building2, CalendarClock, Gauge, LogOut, Settings2, SlidersHorizontal, UsersRound } from 'lucide-react';
+import { Bell, BriefcaseBusiness, Building2, CalendarClock, Gauge, LogOut, Settings2, UsersRound } from 'lucide-react';
 import { useAuth } from '@/contexts/useAuth';
+import { useCollection } from '@/hooks/useCollection';
+import type { NotificationItem } from '@/types';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: Gauge },
   { to: '/jobs', label: 'Job Posts', icon: BriefcaseBusiness },
-  { to: '/requirements', label: 'Requirements', icon: SlidersHorizontal },
   { to: '/pipeline', label: 'Candidates', icon: UsersRound },
   { to: '/interviews', label: 'Interviews', icon: CalendarClock },
   { to: '/campus', label: 'Campus Drives', icon: Building2 },
-  { to: '/notifications', label: 'Notifications', icon: Bell },
   { to: '/admin', label: 'System Settings', icon: Settings2 },
 ];
 
 const titles: Record<string, string> = {
   '/': 'Dashboard',
   '/jobs': 'Job Requisitions',
-  '/requirements': 'Competency Blueprint',
   '/pipeline': 'Candidate Pipeline',
   '/interviews': 'Interview Calendar',
   '/campus': 'Campus Recruitment',
-  '/notifications': 'Notifications Center',
   '/admin': 'System Settings',
 };
 
@@ -28,6 +27,8 @@ export default function AppLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const { items: notifications } = useCollection<NotificationItem>('notifications');
 
   const handleLogout = () => {
     logout();
@@ -35,6 +36,7 @@ export default function AppLayout() {
   };
 
   const userInitial = user?.displayName ? user.displayName.charAt(0).toUpperCase() : 'A';
+  const unreadCount = notifications.filter(n => n.status !== 'Sent').length;
 
   return (
     <div className="min-h-screen bg-[#F2EFEA] text-brand-navy font-sans antialiased">
@@ -122,13 +124,46 @@ export default function AppLayout() {
               </div>
               
               {/* Notifications Icon */}
-              <button 
-                onClick={() => navigate('/notifications')}
-                className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[#ECE8E2] bg-white text-brand-navy hover:bg-stone-50 transition cursor-pointer"
-              >
-                <Bell className="h-3.5 w-3.5" strokeWidth={1.5} />
-                <span className="absolute right-2.5 top-2.5 h-1 w-1 rounded-full bg-brand-orange" />
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[#ECE8E2] bg-white text-brand-navy hover:bg-stone-50 transition cursor-pointer"
+                >
+                  <Bell className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  {unreadCount > 0 && (
+                    <span className="absolute right-2.5 top-2.5 h-1.5 w-1.5 rounded-full bg-brand-orange" />
+                  )}
+                </button>
+                
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white border border-[#ECE8E2] rounded-2xl shadow-xl z-50 p-4 space-y-3.5 max-h-[350px] overflow-y-auto">
+                    <div className="flex items-center justify-between border-b border-[#ECE8E2] pb-2">
+                      <span className="folio-mono text-[9px] uppercase tracking-wider text-brand-navy font-bold">Notifications Center</span>
+                      <button 
+                        onClick={() => setShowNotifications(false)}
+                        className="text-[9px] folio-mono uppercase text-brand-purple hover:underline"
+                      >
+                        Close
+                      </button>
+                    </div>
+                    <div className="space-y-3">
+                      {notifications.length === 0 ? (
+                        <p className="text-xs text-stone-400 text-center py-4">No active notifications</p>
+                      ) : (
+                        notifications.map((item) => (
+                          <div key={item.id} className="text-xs border-b border-stone-50 pb-2 last:border-0 last:pb-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-bold text-brand-navy">{item.title}</span>
+                              <span className="text-[8px] font-mono text-brand-purple bg-brand-purple/5 px-1.5 py-0.5 rounded border border-brand-purple/10 uppercase font-bold">{item.channel}</span>
+                            </div>
+                            <p className="text-[#6D6B8D]/80 mt-1 font-sans text-[11px] leading-relaxed">{item.detail}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* User Avatar Circle */}
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-navy text-white text-[11px] font-bold font-sans border border-brand-navy/10 shadow-sm">

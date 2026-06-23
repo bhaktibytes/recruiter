@@ -1,14 +1,15 @@
-import { Activity, BriefcaseBusiness, CalendarClock, CheckCircle2, UsersRound } from 'lucide-react';
+import { Activity, BriefcaseBusiness, CalendarClock, CheckCircle2, UsersRound, BellRing } from 'lucide-react';
 import type { ElementType } from 'react';
 import HiringFunnelChart from '@/components/charts/HiringFunnelChart';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useCollection } from '@/hooks/useCollection';
-import type { Candidate, Interview, Job } from '@/types';
+import type { Candidate, Interview, Job, NotificationItem } from '@/types';
 
 export default function DashboardPage() {
   const { items: jobs } = useCollection<Job>('jobs');
   const { items: candidates } = useCollection<Candidate>('candidates');
   const { items: interviews } = useCollection<Interview>('interviews');
+  const { items: notifications } = useCollection<NotificationItem>('notifications');
 
   const activeJobs = jobs.filter((job) => job.status === 'Active').length;
   const offers = candidates.filter((candidate) => candidate.status === 'Offered').length;
@@ -82,42 +83,68 @@ export default function DashboardPage() {
           </div>
         </div>
  
-        {/* Priority Requisitions Card */}
-        <div className="rounded-2xl border border-stone-200/60 bg-white p-6 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="mb-4 border-b border-[#ECE8E2] pb-4">
-              <h2 className="folio-section-title text-brand-navy">Priority Requisitions</h2>
-              <p className="mt-0.5 folio-meta text-[#6D6B8D] uppercase">Open roles requiring immediate sourcing.</p>
+        {/* Right Column: Requisitions & Notifications */}
+        <div className="space-y-6">
+          {/* Priority Requisitions Card */}
+          <div className="rounded-2xl border border-stone-200/60 bg-white p-6 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="mb-4 border-b border-[#ECE8E2] pb-4">
+                <h2 className="folio-section-title text-brand-navy">Priority Requisitions</h2>
+                <p className="mt-0.5 folio-meta text-[#6D6B8D] uppercase">Open roles requiring immediate sourcing.</p>
+              </div>
+              <div className="space-y-3.5">
+                {jobs.slice(0, 2).map((job) => (
+                  <div key={job.id} className="rounded-xl border border-[#ECE8E2] bg-white p-4 hover:border-brand-purple transition-all duration-300 card-hover">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-sans font-bold text-brand-navy text-sm leading-tight">{job.title}</h3>
+                        <p className="mt-0.5 text-[11px] text-[#6D6B8D] font-sans">{job.department} · {job.location}</p>
+                      </div>
+                      <div className="flex gap-1.5 flex-wrap">
+                        <StatusBadge value={job.priority} />
+                        <StatusBadge value={job.status} />
+                      </div>
+                    </div>
+                    
+                    {/* Rich metadata display (Days remaining & hiring velocity) */}
+                    <div className="mt-4 pt-2.5 border-t border-[#ECE8E2] grid grid-cols-3 gap-2 text-[10px]">
+                      <div>
+                        <div className="folio-label text-[8px] uppercase tracking-[0.15em] text-[#6D6B8D] font-bold mb-0.5">Sourcing</div>
+                        <div className="folio-mono font-bold text-brand-navy">{job.applicantsCount} Candidates</div>
+                      </div>
+                      <div>
+                        <div className="folio-label text-[8px] uppercase tracking-[0.15em] text-[#6D6B8D] font-bold mb-0.5">Timeline</div>
+                        <div className="folio-mono font-bold text-brand-orange">14 Days Left</div>
+                      </div>
+                      <div>
+                        <div className="folio-label text-[8px] uppercase tracking-[0.15em] text-[#6D6B8D] font-bold mb-0.5">Urgency</div>
+                        <div className="folio-mono font-bold text-brand-purple">Velocity: Fast</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="space-y-3.5">
-              {jobs.slice(0, 3).map((job) => (
-                <div key={job.id} className="rounded-xl border border-[#ECE8E2] bg-white p-4 hover:border-brand-purple transition-all duration-300 card-hover">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-sans font-bold text-brand-navy text-sm leading-tight">{job.title}</h3>
-                      <p className="mt-0.5 text-[11px] text-[#6D6B8D] font-sans">{job.department} · {job.location}</p>
-                    </div>
-                    <div className="flex gap-1.5 flex-wrap">
-                      <StatusBadge value={job.priority} />
-                      <StatusBadge value={job.status} />
-                    </div>
+          </div>
+
+          {/* Compact Notifications Widget */}
+          <div className="rounded-2xl border border-stone-200/60 bg-white p-6 shadow-sm">
+            <div className="mb-4 border-b border-[#ECE8E2] pb-4 flex items-center justify-between">
+              <div>
+                <h2 className="folio-section-title text-brand-navy">Outbound Queue</h2>
+                <p className="mt-0.5 folio-meta text-[#6D6B8D] uppercase">Latest communication logs.</p>
+              </div>
+              <BellRing className="h-4.5 w-4.5 text-[#6D6B8D]/80" strokeWidth={1.5} />
+            </div>
+            
+            <div className="space-y-3">
+              {notifications.slice(0, 3).map((item) => (
+                <div key={item.id} className="text-xs border-b border-stone-100 pb-2.5 last:border-0 last:pb-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-brand-navy leading-tight">{item.title}</span>
+                    <span className="text-[8px] font-mono text-brand-purple bg-brand-purple/5 px-1.5 py-0.5 rounded border border-brand-purple/10 uppercase font-bold">{item.channel}</span>
                   </div>
-                  
-                  {/* Rich metadata display (Days remaining & hiring velocity) */}
-                  <div className="mt-4 pt-2.5 border-t border-[#ECE8E2] grid grid-cols-3 gap-2 text-[10px]">
-                    <div>
-                      <div className="folio-label text-[8px] uppercase tracking-[0.15em] text-[#6D6B8D] font-bold mb-0.5">Sourcing</div>
-                      <div className="folio-mono font-bold text-brand-navy">186 Candidates</div>
-                    </div>
-                    <div>
-                      <div className="folio-label text-[8px] uppercase tracking-[0.15em] text-[#6D6B8D] font-bold mb-0.5">Timeline</div>
-                      <div className="folio-mono font-bold text-brand-orange">14 Days Left</div>
-                    </div>
-                    <div>
-                      <div className="folio-label text-[8px] uppercase tracking-[0.15em] text-[#6D6B8D] font-bold mb-0.5">Urgency</div>
-                      <div className="folio-mono font-bold text-brand-purple">Velocity: Fast</div>
-                    </div>
-                  </div>
+                  <p className="text-[#6D6B8D]/85 mt-1 leading-normal font-sans text-[11px]">{item.detail}</p>
                 </div>
               ))}
             </div>

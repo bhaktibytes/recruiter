@@ -21,6 +21,10 @@ export interface Job {
   priority: 'Critical' | 'High' | 'Medium';
   targetDate: string;
   description: string;
+  jdQuality?: 'Good' | 'Average' | 'Bad';
+  weights?: Record<string, number>;
+  skillsRequired?: string[];
+  experienceRequired?: string;
 }
 
 export interface Candidate {

@@ -43,7 +43,11 @@ export const seedJobs: Job[] = [
     hiringManager: 'Arjun Mehta',
     priority: 'High',
     targetDate: '2026-07-15',
-    description: 'Own end-to-end product design for recruiter-facing workflows and hiring analytics.',
+    description: 'Own end-to-end product design for recruiter-facing workflows and hiring analytics. Work closely with product management and engineering to map user journeys and build elegant Figma interfaces.',
+    jdQuality: 'Good',
+    skillsRequired: ['Figma', 'Design systems', 'UX research'],
+    experienceRequired: '2-4 years',
+    weights: { 'Creativity': 50, 'Leadership': 20, 'Teamwork': 30 }
   },
   {
     id: 'job-frontend-intern',
@@ -57,7 +61,11 @@ export const seedJobs: Job[] = [
     hiringManager: 'Sneha Rao',
     priority: 'Critical',
     targetDate: '2026-07-01',
-    description: 'Build React experiences, reusable UI primitives, and campus hiring prototypes.',
+    description: 'Build React experiences, reusable UI primitives, and campus hiring prototypes. Collaborate with visual designers to implement pixel-perfect user interfaces.',
+    jdQuality: 'Good',
+    skillsRequired: ['React', 'TypeScript', 'CSS', 'JavaScript'],
+    experienceRequired: 'Fresher / Student',
+    weights: { 'Creativity': 30, 'Leadership': 20, 'Teamwork': 50 }
   },
   {
     id: 'job-data-analyst',
@@ -72,6 +80,10 @@ export const seedJobs: Job[] = [
     priority: 'Medium',
     targetDate: '2026-08-05',
     description: 'Create reporting models for source quality, pipeline velocity, and offer conversion.',
+    jdQuality: 'Average',
+    skillsRequired: ['SQL', 'Python', 'Excel'],
+    experienceRequired: '1-2 years',
+    weights: { 'Creativity': 20, 'Leadership': 30, 'Teamwork': 50 }
   },
   {
     id: 'job-sales-lead',
@@ -85,7 +97,11 @@ export const seedJobs: Job[] = [
     hiringManager: 'Karan Bedi',
     priority: 'High',
     targetDate: '2026-07-22',
-    description: 'Lead outbound enterprise motion and partner with hiring managers on GTM hiring plans.',
+    description: 'Lead outbound enterprise motion and partner with hiring managers on GTM hiring plans. Outbound business development experience in high-growth SaaS environments is required.',
+    jdQuality: 'Good',
+    skillsRequired: ['Enterprise sales', 'Negotiation', 'CRM'],
+    experienceRequired: '5+ years',
+    weights: { 'Creativity': 30, 'Leadership': 40, 'Teamwork': 30 }
   },
 ];
 

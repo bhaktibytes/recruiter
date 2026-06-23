@@ -1,17 +1,24 @@
-import { ArrowRight, CheckCircle2, UsersRound, MapPin } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowRight, CheckCircle2, UsersRound, MapPin, Filter } from 'lucide-react';
 import { useCollection } from '@/hooks/useCollection';
-import type { Candidate } from '@/types';
+import type { Candidate, Job } from '@/types';
 
 const stages: Candidate['status'][] = ['Applied', 'Matched', 'Assessment Completed', 'Shortlisted', 'Interviewing', 'Offered', 'Hired'];
 
 export default function PipelinePage() {
   const { items: candidates, updateItem } = useCollection<Candidate>('candidates');
+  const { items: jobs } = useCollection<Job>('jobs');
+  const [selectedJobId, setSelectedJobId] = useState<string>('all');
 
   const advanceCandidate = async (candidate: Candidate) => {
     const currentIndex = stages.indexOf(candidate.status);
     const textNext = stages[Math.min(currentIndex + 1, stages.length - 1)];
     await updateItem(candidate.id, { status: textNext });
   };
+
+  const filteredCandidates = selectedJobId === 'all' 
+    ? candidates 
+    : candidates.filter((c) => c.jobId === selectedJobId);
 
   return (
     <div className="space-y-10 w-full mx-auto max-w-5xl">
@@ -28,6 +35,23 @@ export default function PipelinePage() {
         </p>
       </header>
 
+      {/* Job Filter Selector */}
+      <div className="flex flex-wrap items-center gap-4 bg-stone-50/50 border border-[#ECE8E2] rounded-2xl p-4 shadow-sm">
+        <label className="folio-mono text-[9px] uppercase tracking-wider text-brand-navy font-bold flex items-center gap-1.5">
+          <Filter className="h-3.5 w-3.5 text-brand-purple" strokeWidth={2} /> Select Requisition Match View:
+        </label>
+        <select
+          value={selectedJobId}
+          onChange={(e) => setSelectedJobId(e.target.value)}
+          className="input max-w-xs cursor-pointer font-bold text-xs bg-white border-[#ECE8E2]"
+        >
+          <option value="all">All Jobs (Complete Workspace)</option>
+          {jobs.map((job) => (
+            <option key={job.id} value={job.id}>{job.title} · {job.department}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Top Metrics Row - Compact */}
       <section className="grid gap-6 md:grid-cols-3">
         {/* Pipeline Health */}
@@ -42,7 +66,7 @@ export default function PipelinePage() {
           </div>
           <div className="mt-2">
             <div className="font-serif text-3xl font-normal tracking-tight text-brand-navy">
-              {candidates.length}
+              {filteredCandidates.length}
             </div>
             <p className="text-[11px] text-[#6D6B8D] font-sans mt-1">
               active candidates in process
@@ -62,7 +86,7 @@ export default function PipelinePage() {
           </div>
           <div className="mt-2">
             <div className="font-serif text-3xl font-normal tracking-tight text-brand-purple">
-              {candidates.length ? Math.max(0, ...candidates.map((candidate) => candidate.matchScore)) : 0}%
+              {filteredCandidates.length ? Math.max(0, ...filteredCandidates.map((candidate) => candidate.matchScore)) : 0}%
             </div>
             <p className="text-[11px] text-[#6D6B8D] font-sans mt-1">
               highest compatibility score
@@ -82,7 +106,7 @@ export default function PipelinePage() {
           </div>
           <div className="mt-2">
             <div className="font-serif text-3xl font-normal tracking-tight text-brand-orange">
-              {candidates.filter((candidate) => candidate.status === 'Offered').length}
+              {filteredCandidates.filter((candidate) => candidate.status === 'Offered').length}
             </div>
             <p className="text-[11px] text-[#6D6B8D] font-sans mt-1">
               awaiting approval
@@ -94,7 +118,7 @@ export default function PipelinePage() {
       {/* Kanban Board */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3 pb-6 overflow-x-auto select-none">
         {stages.map((stage) => {
-          const stageCandidates = candidates.filter((candidate) => candidate.status === stage);
+          const stageCandidates = filteredCandidates.filter((candidate) => candidate.status === stage);
           const stageColorClass = 
             stage === 'Applied'
               ? 'text-stone-500'

@@ -104,7 +104,7 @@ export default function AppLayout() {
       <div className="lg:pl-[225px]">
         {/* Sticky Top Header (Compact Figma size) */}
         <header className="sticky top-0 z-10 border-b border-[#ECE8E2] bg-[#F2EFEA]/90 px-6 py-2.5 backdrop-blur sm:px-8 shadow-sm">
-          <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4">
+          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4">
             {/* Workspace Breadcrumbs */}
             <div className="flex items-center gap-2">
               <span className="folio-mono text-[9px] uppercase tracking-[0.2em] text-[#6D6B8D] font-bold">Workspace</span>
@@ -139,7 +139,7 @@ export default function AppLayout() {
         </header>
 
         {/* Content Area */}
-        <main className="mx-auto max-w-[1600px] p-5 sm:p-6.5">
+        <main className="mx-auto max-w-5xl p-5 sm:p-6">
           {/* Mobile responsive navigation toolbar */}
           <div className="mb-4 flex gap-1.5 overflow-x-auto pb-1.5 lg:hidden scrollbar-none">
             {navItems.map(({ to, label }) => (

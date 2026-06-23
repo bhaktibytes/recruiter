@@ -31,11 +31,6 @@ export default function LoginPage() {
     navigate('/');
   };
 
-  const loginAsRecruiterDirectly = () => {
-    login(roleCredentials.Recruiter.email, roleCredentials.Recruiter.password, 'Recruiter');
-    navigate('/');
-  };
-
   return (
     <div className="min-h-screen bg-[#F2EFEA] flex flex-col items-center justify-center p-6 text-brand-navy">
       {/* Brand Header */}
@@ -55,25 +50,6 @@ export default function LoginPage() {
 
       {/* Login Form Container Card */}
       <div className="bg-white border border-[#ECE8E2] rounded-2xl p-8 shadow-[0_10px_35px_-10px_rgba(21,22,51,0.04)] max-w-md w-full">
-        {/* Direct Recruiter Access */}
-        <button 
-          type="button" 
-          onClick={loginAsRecruiterDirectly}
-          className="w-full mb-6 py-3.5 px-4 rounded-xl text-white font-bold bg-[#151633] hover:bg-[#242656] flex items-center justify-center gap-2 shadow-md transition duration-150 cursor-pointer border border-white/10"
-        >
-          <span>Login as Recruiter</span>
-          <span className="text-[9px] font-bold tracking-wide bg-brand-purple text-white px-2.5 py-0.5 rounded-full uppercase">Instant Redirect</span>
-        </button>
-
-        <div className="relative my-5">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#ECE8E2]" />
-          </div>
-          <div className="relative flex justify-center text-[9px] font-bold uppercase tracking-widest folio-mono">
-            <span className="bg-white px-3 text-[#6D6B8D]">or standard login</span>
-          </div>
-        </div>
-
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
             <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">

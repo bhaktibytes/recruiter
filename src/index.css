@@ -71,16 +71,26 @@
   }
 
   .button-primary {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white transition rounded-xl;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-wider text-white transition-all duration-150 rounded-xl select-none active:scale-[0.98];
     background-color: #5B4FE9;
+  }
+  .button-primary:hover {
+    background-color: #FF6B35;
   }
 
   .button-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition hover:bg-stone-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-[#ECE8E2] bg-white px-5 py-3 text-xs font-bold uppercase tracking-wider text-brand-navy transition-all duration-150 hover:bg-stone-50 active:scale-[0.98] select-none;
   }
 
   .input {
-    @apply w-full rounded-xl border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition;
+    @apply w-full rounded-xl border border-[#ECE8E2] bg-white px-4.5 py-3 text-sm text-[#151633] placeholder-stone-400 outline-none transition duration-150 focus:border-[#5B4FE9] focus:ring-1 focus:ring-[#5B4FE9]/10;
+  }
+
+  select.input, select.select-custom {
+    @apply appearance-none bg-no-repeat pr-10;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236D6B8D' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+    background-position: right 0.85rem center;
+    background-size: 1.25rem;
   }
 
   .badge {
@@ -115,11 +125,11 @@
 
   /* Premium Card Hover Effect */
   .card-hover {
-    transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1), border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), border-color 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
   .card-hover:hover {
     transform: translateY(-2px);
     border-color: #5B4FE9;
-    box-shadow: 0 10px 30px -15px rgba(91, 79, 233, 0.08);
+    box-shadow: 0 12px 30px -10px rgba(21, 22, 51, 0.04);
   }
 }

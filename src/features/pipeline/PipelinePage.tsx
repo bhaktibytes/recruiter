@@ -14,80 +14,80 @@ export default function PipelinePage() {
   };
 
   return (
-    <div className="space-y-12 w-full mx-auto">
-      {/* Page Header */}
-      <header className="border-b border-[#ECE8E2] pb-8 mb-8">
-        <p className="folio-mono text-[10px] uppercase tracking-[0.2em] text-brand-lavender mb-2 font-bold">
+    <div className="space-y-6 w-full mx-auto">
+      {/* Page Header - Compact */}
+      <header className="border-b border-[#ECE8E2] pb-5 mb-5">
+        <p className="folio-mono text-[9px] uppercase tracking-[0.2em] text-brand-lavender mb-1 font-bold">
           Candidate Pipeline
         </p>
-        <h1 className="folio-heading text-4xl md:text-5xl font-light text-brand-navy leading-tight tracking-tight">
-          Evaluation Pipeline
+        <h1 className="folio-heading text-3xl font-light text-brand-navy leading-tight tracking-tight">
+          Candidate Pipeline
         </h1>
-        <p className="mt-4 text-[#6D6B8D] font-sans text-base max-w-2xl leading-relaxed">
-          Review match scores, track candidate movement through the recruitment stages, and advance candidates with AI-powered fit analysis.
+        <p className="mt-1.5 text-xs text-[#6D6B8D] font-sans max-w-xl">
+          Advance candidates through stages and compare match evaluations computed across candidate portfolios.
         </p>
       </header>
 
-      {/* Top Metrics Grid */}
-      <section className="grid gap-6 md:grid-cols-3">
+      {/* Top Metrics Grid - Compact */}
+      <section className="grid gap-4 md:grid-cols-3">
         {/* Pipeline Health */}
-        <div className="p-6 rounded-2xl border border-[#ECE8E2] bg-white transition-all duration-300 card-hover flex flex-col justify-between min-h-[150px] shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
+        <div className="p-4.5 rounded-xl border border-[#ECE8E2] bg-white transition-all duration-300 card-hover flex flex-col justify-between min-h-[110px] shadow-[0_4px_12px_rgba(0,0,0,0.01)]">
           <div className="flex items-start justify-between">
-            <span className="folio-mono text-[9px] uppercase tracking-[0.18em] text-[#6D6B8D] font-bold">
+            <span className="folio-mono text-[8px] uppercase tracking-[0.18em] text-[#6D6B8D] font-bold">
               Pipeline health
             </span>
-            <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-navy" />
-              <UsersRound className="h-4 w-4 text-[#6D6B8D]" strokeWidth={1.5} />
+            <div className="flex items-center gap-1.5">
+              <span className="h-1 w-1 rounded-full bg-brand-navy" />
+              <UsersRound className="h-3.5 w-3.5 text-[#6D6B8D]" strokeWidth={1.5} />
             </div>
           </div>
-          <div className="mt-4">
-            <div className="folio-mono text-3.5xl font-bold tracking-tight text-brand-navy">
+          <div className="mt-2.5">
+            <div className="folio-mono text-2.5xl font-bold tracking-tight text-brand-navy leading-none">
               {candidates.length}
             </div>
-            <p className="mt-1.5 text-[11px] text-[#6D6B8D] font-sans">
+            <p className="text-[10px] text-[#6D6B8D] font-sans mt-1">
               active candidates in process
             </p>
           </div>
         </div>
 
         {/* Top Match */}
-        <div className="p-6 rounded-2xl border border-[#ECE8E2] bg-white transition-all duration-300 card-hover flex flex-col justify-between min-h-[150px] shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
+        <div className="p-4.5 rounded-xl border border-[#ECE8E2] bg-white transition-all duration-300 card-hover flex flex-col justify-between min-h-[110px] shadow-[0_4px_12px_rgba(0,0,0,0.01)]">
           <div className="flex items-start justify-between">
-            <span className="folio-mono text-[9px] uppercase tracking-[0.18em] text-[#6D6B8D] font-bold">
+            <span className="folio-mono text-[8px] uppercase tracking-[0.18em] text-[#6D6B8D] font-bold">
               Top match
             </span>
-            <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-purple" />
-              <ArrowRight className="h-4 w-4 text-brand-purple" strokeWidth={1.5} />
+            <div className="flex items-center gap-1.5">
+              <span className="h-1 w-1 rounded-full bg-brand-purple" />
+              <ArrowRight className="h-3.5 w-3.5 text-brand-purple" strokeWidth={1.5} />
             </div>
           </div>
-          <div className="mt-4">
-            <div className="folio-mono text-3.5xl font-bold tracking-tight text-brand-purple">
+          <div className="mt-2.5">
+            <div className="folio-mono text-2.5xl font-bold tracking-tight text-brand-purple leading-none">
               {candidates.length ? Math.max(0, ...candidates.map((candidate) => candidate.matchScore)) : 0}%
             </div>
-            <p className="mt-1.5 text-[11px] text-[#6D6B8D] font-sans">
+            <p className="text-[10px] text-[#6D6B8D] font-sans mt-1">
               highest compatibility score
             </p>
           </div>
         </div>
 
         {/* Offer Queue */}
-        <div className="p-6 rounded-2xl border border-[#ECE8E2] bg-white transition-all duration-300 card-hover flex flex-col justify-between min-h-[150px] shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
+        <div className="p-4.5 rounded-xl border border-[#ECE8E2] bg-white transition-all duration-300 card-hover flex flex-col justify-between min-h-[110px] shadow-[0_4px_12px_rgba(0,0,0,0.01)]">
           <div className="flex items-start justify-between">
-            <span className="folio-mono text-[9px] uppercase tracking-[0.18em] text-[#6D6B8D] font-bold">
+            <span className="folio-mono text-[8px] uppercase tracking-[0.18em] text-[#6D6B8D] font-bold">
               Offer queue
             </span>
-            <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-orange" />
-              <CheckCircle2 className="h-4 w-4 text-brand-orange" strokeWidth={1.5} />
+            <div className="flex items-center gap-1.5">
+              <span className="h-1 w-1 rounded-full bg-brand-orange" />
+              <CheckCircle2 className="h-3.5 w-3.5 text-brand-orange" strokeWidth={1.5} />
             </div>
           </div>
-          <div className="mt-4">
-            <div className="folio-mono text-3.5xl font-bold tracking-tight text-brand-orange">
+          <div className="mt-2.5">
+            <div className="folio-mono text-2.5xl font-bold tracking-tight text-brand-orange leading-none">
               {candidates.filter((candidate) => candidate.status === 'Offered').length}
             </div>
-            <p className="mt-1.5 text-[11px] text-[#6D6B8D] font-sans">
+            <p className="text-[10px] text-[#6D6B8D] font-sans mt-1">
               candidates awaiting approval
             </p>
           </div>
@@ -95,7 +95,7 @@ export default function PipelinePage() {
       </section>
 
       {/* Kanban Board */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 pb-6 overflow-x-auto">
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3 pb-6 overflow-x-auto">
         {stages.map((stage) => {
           const stageCandidates = candidates.filter((candidate) => candidate.status === stage);
           const stageColorClass = 
@@ -110,59 +110,62 @@ export default function PipelinePage() {
               : 'text-brand-navy';
 
           return (
-            <div key={stage} className="flex flex-col w-full min-w-[200px] flex-shrink-0">
+            <div key={stage} className="flex flex-col w-full min-w-[190px] flex-shrink-0 bg-stone-50/40 rounded-xl p-2 border border-[#ECE8E2]/50">
               {/* Column Header */}
-              <div className="mb-4 flex items-center justify-between border-b border-[#ECE8E2] pb-3">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <h2 className={`folio-mono text-[9px] uppercase tracking-[0.12em] font-bold truncate ${stageColorClass}`}>
+              <div className="mb-3 flex items-center justify-between border-b border-[#ECE8E2] pb-2 px-1">
+                <div className="flex items-center gap-1 min-w-0">
+                  <h2 className={`folio-mono text-[8.5px] uppercase tracking-[0.12em] font-bold truncate ${stageColorClass}`}>
                     {stage}
                   </h2>
                 </div>
-                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-md bg-brand-navy/5 px-1.5 folio-mono text-[8px] font-bold text-brand-navy/60 border border-brand-navy/5">
+                <span className="flex h-4.5 min-w-[18px] items-center justify-center rounded bg-brand-navy/5 px-1 folio-mono text-[8px] font-bold text-brand-navy/60 border border-brand-navy/5">
                   {stageCandidates.length}
                 </span>
               </div>
 
               {/* Column Cards */}
-              <div className="space-y-4">
+              <div className="space-y-2.5">
                 {stageCandidates.map((candidate) => (
                   <article
                     key={candidate.id}
-                    className="rounded-2xl border border-[#ECE8E2] bg-white p-4.5 shadow-[0_4px_12px_rgba(0,0,0,0.01)] hover:border-brand-purple transition-all duration-300 card-hover flex flex-col justify-between min-h-[190px]"
+                    className="rounded-xl border border-[#ECE8E2] bg-white p-3 shadow-sm hover:border-brand-purple transition-all duration-200 card-hover flex flex-col justify-between min-h-[145px]"
                   >
                     <div>
-                      {/* Avatar and Match tag */}
-                      <div className="flex items-start justify-between gap-2 mb-3.5">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-navy text-white text-[11px] font-sans font-bold flex-shrink-0">
+                      {/* Top Row: Initial Avatar & Match percentage badge */}
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex h-6.5 w-6.5 items-center justify-center rounded-full bg-brand-navy text-white text-[10px] font-sans font-bold flex-shrink-0">
                           {candidate.name.charAt(0)}
                         </div>
                         
-                        {/* Match Score Badge */}
-                        <span className="folio-mono text-[9px] font-bold text-brand-purple bg-brand-purple/5 px-2 py-0.5 rounded border border-brand-purple/10">
-                          {candidate.matchScore}% Match
+                        <span className="folio-mono text-[8px] font-bold text-brand-purple bg-brand-purple/5 px-1.5 py-0.5 rounded border border-brand-purple/10">
+                          {candidate.matchScore}% FIT
                         </span>
                       </div>
 
-                      {/* Candidate Name, Job Title */}
-                      <div className="mb-3">
-                        <h3 className="font-sans font-bold text-brand-navy text-sm leading-snug truncate" title={candidate.name}>
+                      {/* Candidate Name & Role */}
+                      <div className="mb-2">
+                        <h3 className="font-sans font-bold text-brand-navy text-[12.5px] leading-snug truncate" title={candidate.name}>
                           {candidate.name}
                         </h3>
-                        <p className="font-sans text-[11px] text-[#6D6B8D] mt-0.5 truncate" title={candidate.jobTitle}>
+                        <p className="font-sans text-[10px] text-[#6D6B8D] mt-0.5 truncate" title={candidate.jobTitle}>
                           {candidate.jobTitle}
                         </p>
                       </div>
 
-                      {/* Portfolio Score Progress Bar */}
-                      <div className="mt-3.5 pt-3 border-t border-stone-100">
-                        <div className="mb-1 flex items-center justify-between">
-                          <span className="folio-mono text-[8px] uppercase tracking-[0.1em] text-stone-400 font-bold">
-                            Portfolio Score
-                          </span>
-                          <span className="folio-mono text-[9px] font-bold text-brand-purple">
-                            {candidate.matchScore}%
+                      {/* AI Recommended indicator (Figma dot badge style) */}
+                      {candidate.matchScore >= 85 && (
+                        <div className="mb-2 inline-flex items-center gap-1 rounded bg-brand-purple/5 border border-brand-purple/10 px-1.5 py-0.2">
+                          <span className="h-1 w-1 rounded-full bg-brand-purple" />
+                          <span className="folio-mono text-[7px] uppercase tracking-wider text-brand-purple font-bold">
+                            AI Recommend
                           </span>
                         </div>
+                      )}
+                    </div>
+
+                    {/* Progress Bar & Action */}
+                    <div className="mt-2 pt-2 border-t border-stone-100 flex items-center justify-between gap-2.5">
+                      <div className="flex-1">
                         <div className="h-1 rounded-full bg-[#ECE8E2] overflow-hidden">
                           <div
                             className="h-1 rounded-full bg-brand-purple"
@@ -170,26 +173,13 @@ export default function PipelinePage() {
                           />
                         </div>
                       </div>
-                    </div>
-
-                    {/* Top Skills List & Actions */}
-                    <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between gap-2">
-                      <div className="flex flex-wrap gap-1 min-w-0">
-                        {candidate.skills.slice(0, 1).map((skill) => (
-                          <span
-                            key={skill}
-                            className="rounded bg-[#F2EFEA] px-1.5 py-0.5 folio-mono text-[8px] font-bold uppercase text-stone-500 border border-[#ECE8E2] truncate"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
                       
                       <button
                         type="button"
                         onClick={() => void advanceCandidate(candidate)}
                         disabled={candidate.status === 'Hired'}
-                        className="flex h-7 w-7 items-center justify-center rounded-xl bg-stone-50 border border-[#ECE8E2] text-brand-navy transition duration-150 hover:bg-brand-purple hover:text-white disabled:opacity-40 disabled:hover:bg-stone-50 disabled:hover:text-brand-navy cursor-pointer flex-shrink-0"
+                        className="flex h-6 w-6 items-center justify-center rounded-lg bg-stone-50 border border-[#ECE8E2] text-brand-navy transition duration-150 hover:bg-brand-purple hover:text-white disabled:opacity-40 disabled:hover:bg-stone-50 disabled:hover:text-brand-navy cursor-pointer flex-shrink-0"
+                        title="Advance candidate"
                       >
                         <ArrowRight className="h-3 w-3" strokeWidth={2} />
                       </button>

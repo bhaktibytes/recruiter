@@ -148,7 +148,7 @@ export default function JobsPage() {
                   Target Date
                 </label>
                 <input 
-                  className="w-full rounded-xl border border-[#ECE8E2] bg-white px-3 py-2.5 text-sm font-semibold text-brand-navy outline-none cursor-pointer focus:border-[#5B4FE9]" 
+                  className="input cursor-pointer" 
                   type="date" 
                   value={form.targetDate} 
                   onChange={(event) => setForm({ ...form, targetDate: event.target.value })} 

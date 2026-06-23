@@ -1,5 +1,4 @@
-import { ArrowRight, Mail, MapPin } from 'lucide-react';
-import { StatusBadge } from '@/components/StatusBadge';
+import { ArrowRight, CheckCircle2, UsersRound } from 'lucide-react';
 import { useCollection } from '@/hooks/useCollection';
 import type { Candidate } from '@/types';
 
@@ -15,132 +14,187 @@ export default function PipelinePage() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-12 w-full mx-auto">
+      {/* Page Header */}
+      <header className="border-b border-[#ECE8E2] pb-8 mb-8">
+        <p className="folio-mono text-[10px] uppercase tracking-[0.2em] text-brand-lavender mb-2 font-bold">
+          Candidate Pipeline
+        </p>
+        <h1 className="folio-heading text-4xl md:text-5xl font-light text-brand-navy leading-tight tracking-tight">
+          Evaluation Pipeline
+        </h1>
+        <p className="mt-4 text-[#6D6B8D] font-sans text-base max-w-2xl leading-relaxed">
+          Review match scores, track candidate movement through the recruitment stages, and advance candidates with AI-powered fit analysis.
+        </p>
+      </header>
+
+      {/* Top Metrics Grid */}
       <section className="grid gap-6 md:grid-cols-3">
-        <div className="metric-card">
-          <div className="text-sm font-semibold uppercase tracking-wider text-stone-500">
-  Pipeline health
-</div>
-          <div className="mt-3 text-5xl font-black text-stone-900">{candidates.length}</div>
-          <div className="text-sm text-stone-500">active candidates</div>
+        {/* Pipeline Health */}
+        <div className="p-6 rounded-2xl border border-[#ECE8E2] bg-white transition-all duration-300 card-hover flex flex-col justify-between min-h-[150px] shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
+          <div className="flex items-start justify-between">
+            <span className="folio-mono text-[9px] uppercase tracking-[0.18em] text-[#6D6B8D] font-bold">
+              Pipeline health
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-navy" />
+              <UsersRound className="h-4 w-4 text-[#6D6B8D]" strokeWidth={1.5} />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="folio-mono text-3.5xl font-bold tracking-tight text-brand-navy">
+              {candidates.length}
+            </div>
+            <p className="mt-1.5 text-[11px] text-[#6D6B8D] font-sans">
+              active candidates in process
+            </p>
+          </div>
         </div>
-        <div className="metric-card">
-          <div className="text-sm font-semibold uppercase tracking-wider text-stone-500">
-  Top match
-</div>
-          <div className="mt-3 text-5xl font-black text-emerald-700">{Math.max(0, ...candidates.map((candidate) => candidate.matchScore))}%</div>
-          <div className="text-sm text-stone-500">AI fit score</div>
+
+        {/* Top Match */}
+        <div className="p-6 rounded-2xl border border-[#ECE8E2] bg-white transition-all duration-300 card-hover flex flex-col justify-between min-h-[150px] shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
+          <div className="flex items-start justify-between">
+            <span className="folio-mono text-[9px] uppercase tracking-[0.18em] text-[#6D6B8D] font-bold">
+              Top match
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-purple" />
+              <ArrowRight className="h-4 w-4 text-brand-purple" strokeWidth={1.5} />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="folio-mono text-3.5xl font-bold tracking-tight text-brand-purple">
+              {candidates.length ? Math.max(0, ...candidates.map((candidate) => candidate.matchScore)) : 0}%
+            </div>
+            <p className="mt-1.5 text-[11px] text-[#6D6B8D] font-sans">
+              highest compatibility score
+            </p>
+          </div>
         </div>
-        <div className="metric-card">
-          <div className="text-sm font-semibold uppercase tracking-wider text-stone-500">
-  Offer queue
-</div>
-          <div className="mt-3 text-3xl font-black">{candidates.filter((candidate) => candidate.status === 'Offered').length}</div>
-          <div className="text-sm text-stone-500">awaiting next action</div>
+
+        {/* Offer Queue */}
+        <div className="p-6 rounded-2xl border border-[#ECE8E2] bg-white transition-all duration-300 card-hover flex flex-col justify-between min-h-[150px] shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
+          <div className="flex items-start justify-between">
+            <span className="folio-mono text-[9px] uppercase tracking-[0.18em] text-[#6D6B8D] font-bold">
+              Offer queue
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-orange" />
+              <CheckCircle2 className="h-4 w-4 text-brand-orange" strokeWidth={1.5} />
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="folio-mono text-3.5xl font-bold tracking-tight text-brand-orange">
+              {candidates.filter((candidate) => candidate.status === 'Offered').length}
+            </div>
+            <p className="mt-1.5 text-[11px] text-[#6D6B8D] font-sans">
+              candidates awaiting approval
+            </p>
+          </div>
         </div>
       </section>
 
-      <section className="flex gap-6 overflow-x-auto pb-6 snap-x">
+      {/* Kanban Board */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4 pb-6 overflow-x-auto">
         {stages.map((stage) => {
           const stageCandidates = candidates.filter((candidate) => candidate.status === stage);
+          const stageColorClass = 
+            stage === 'Applied'
+              ? 'text-stone-500'
+              : stage === 'Matched' || stage === 'Assessment Completed'
+              ? 'text-brand-purple'
+              : stage === 'Shortlisted' || stage === 'Interviewing' || stage === 'Offered'
+              ? 'text-brand-orange'
+              : stage === 'Hired'
+              ? 'text-brand-mint'
+              : 'text-brand-navy';
+
           return (
-            <div key={stage} className="panel min-w-[360px] p-5 flex-shrink-0 bg-[#FAFAFD] border border-[#F1F1F5] rounded-[36px]">
-<div className="mb-5 flex items-center justify-between border-b border-stone-100 pb-3">                <h2
-  className={`text-xl font-black tracking-tight ${
-    stage === 'Applied'
-      ? 'text-blue-600'
-      : stage === 'Matched'
-      ? 'text-[#5B4FE9]'
-      : stage === 'Assessment Completed'
-      ? 'text-orange-500'
-      : stage === 'Shortlisted'
-      ? 'text-emerald-600'
-      : stage === 'Interviewing'
-      ? 'text-indigo-600'
-      : stage === 'Offered'
-      ? 'text-green-600'
-      : 'text-stone-900'
-  }`}
->
-  {stage}
-</h2>
-                <span className="rounded-full bg-[#F6F5FF] px-3 py-1 text-xs font-bold text-[#5B4FE9]">{stageCandidates.length}</span>
+            <div key={stage} className="flex flex-col w-full min-w-[200px] flex-shrink-0">
+              {/* Column Header */}
+              <div className="mb-4 flex items-center justify-between border-b border-[#ECE8E2] pb-3">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <h2 className={`folio-mono text-[9px] uppercase tracking-[0.12em] font-bold truncate ${stageColorClass}`}>
+                    {stage}
+                  </h2>
+                </div>
+                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-md bg-brand-navy/5 px-1.5 folio-mono text-[8px] font-bold text-brand-navy/60 border border-brand-navy/5">
+                  {stageCandidates.length}
+                </span>
               </div>
-              <div className="space-y-3">
+
+              {/* Column Cards */}
+              <div className="space-y-4">
                 {stageCandidates.map((candidate) => (
                   <article
-  key={candidate.id}
-  className="rounded-3xl border border-[#ECEAFB] bg-[#FAFAFD] p-4 shadow-[0_8px_30px_rgba(91,79,233,0.08)] hover:border-[#ECEAFB] hover:-translate-y-1 hover:shadow-xl transition-all duration-300"
->
-  <div className="flex items-start justify-between">
-    <div className="flex items-center gap-3">
+                    key={candidate.id}
+                    className="rounded-2xl border border-[#ECE8E2] bg-white p-4.5 shadow-[0_4px_12px_rgba(0,0,0,0.01)] hover:border-brand-purple transition-all duration-300 card-hover flex flex-col justify-between min-h-[190px]"
+                  >
+                    <div>
+                      {/* Avatar and Match tag */}
+                      <div className="flex items-start justify-between gap-2 mb-3.5">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-navy text-white text-[11px] font-sans font-bold flex-shrink-0">
+                          {candidate.name.charAt(0)}
+                        </div>
+                        
+                        {/* Match Score Badge */}
+                        <span className="folio-mono text-[9px] font-bold text-brand-purple bg-brand-purple/5 px-2 py-0.5 rounded border border-brand-purple/10">
+                          {candidate.matchScore}% Match
+                        </span>
+                      </div>
 
-  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#EEF0FF] font-bold text-lg text-[#5B4FE9]">
-    {candidate.name.charAt(0)}
-  </div>
+                      {/* Candidate Name, Job Title */}
+                      <div className="mb-3">
+                        <h3 className="font-sans font-bold text-brand-navy text-sm leading-snug truncate" title={candidate.name}>
+                          {candidate.name}
+                        </h3>
+                        <p className="font-sans text-[11px] text-[#6D6B8D] mt-0.5 truncate" title={candidate.jobTitle}>
+                          {candidate.jobTitle}
+                        </p>
+                      </div>
 
-  <div>
-    <h3 className="text-[20px] font-black tracking-tight text-[#151633]">
-      {candidate.name}
-    </h3>
+                      {/* Portfolio Score Progress Bar */}
+                      <div className="mt-3.5 pt-3 border-t border-stone-100">
+                        <div className="mb-1 flex items-center justify-between">
+                          <span className="folio-mono text-[8px] uppercase tracking-[0.1em] text-stone-400 font-bold">
+                            Portfolio Score
+                          </span>
+                          <span className="folio-mono text-[9px] font-bold text-brand-purple">
+                            {candidate.matchScore}%
+                          </span>
+                        </div>
+                        <div className="h-1 rounded-full bg-[#ECE8E2] overflow-hidden">
+                          <div
+                            className="h-1 rounded-full bg-brand-purple"
+                            style={{ width: `${candidate.matchScore}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
 
-    <p className="text-sm text-[#6D6B8D]">
-      {candidate.jobTitle}
-    </p>
-  </div>
-
-</div>
-
-    <div className="rounded-full bg-[#EEF2FF] px-4 py-1 text-sm font-black text-[#5B4FE9]">
-      {candidate.matchScore}%
-    </div>
-  </div>
-
-  <div className="mt-4 space-y-2 text-xs text-stone-400">
-    <div className="flex items-center gap-2">
-      <Mail className="h-3.5 w-3.5" />
-      {candidate.email}
-    </div>
-
-    <div className="flex items-center gap-2">
-      <MapPin className="h-3.5 w-3.5" />
-      {candidate.location}
-    </div>
-  </div>
-  
-  <div className="mt-3 flex items-center justify-between rounded-xl bg-[#F3F2FF] px-3 py-2">
-  <span className="text-xs font-semibold text-[#5B4FE9]">
-    Portfolio Intelligence
-  </span>
-
-  <span className="text-xs font-black text-[#5B4FE9]">
-    {candidate.matchScore + 5}%
-  </span>
-</div>
-  <div className="mt-4 flex flex-wrap gap-2">
-    {candidate.skills.slice(0, 3).map((skill) => (
-      <span
-        key={skill}
-        className="rounded-full border border-[#F1F1F5] bg-white px-3 py-1 text-xs font-medium text-[#151633]"
-      >
-        {skill}
-      </span>
-    ))}
-  </div>
-
-  <div className="mt-4 flex items-center justify-between">
-    <StatusBadge value={candidate.source} />
-
-    <button
-      type="button"
-      onClick={() => void advanceCandidate(candidate)}
-      disabled={candidate.status === 'Hired'}
-      className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#ECEAFB] bg-white hover:bg-[#5B4FE9] hover:text-white transition-all duration-300 rounded-xl border border-stone-200 hover:bg-stone-50"
-    >
-      <ArrowRight className="h-4 w-4" />
-    </button>
-  </div>
-</article>
+                    {/* Top Skills List & Actions */}
+                    <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between gap-2">
+                      <div className="flex flex-wrap gap-1 min-w-0">
+                        {candidate.skills.slice(0, 1).map((skill) => (
+                          <span
+                            key={skill}
+                            className="rounded bg-[#F2EFEA] px-1.5 py-0.5 folio-mono text-[8px] font-bold uppercase text-stone-500 border border-[#ECE8E2] truncate"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                      
+                      <button
+                        type="button"
+                        onClick={() => void advanceCandidate(candidate)}
+                        disabled={candidate.status === 'Hired'}
+                        className="flex h-7 w-7 items-center justify-center rounded-xl bg-stone-50 border border-[#ECE8E2] text-brand-navy transition duration-150 hover:bg-brand-purple hover:text-white disabled:opacity-40 disabled:hover:bg-stone-50 disabled:hover:text-brand-navy cursor-pointer flex-shrink-0"
+                      >
+                        <ArrowRight className="h-3 w-3" strokeWidth={2} />
+                      </button>
+                    </div>
+                  </article>
                 ))}
               </div>
             </div>

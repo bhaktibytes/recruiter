@@ -1,6 +1,5 @@
-import { CalendarPlus, CheckCircle2, Clock3, Video } from 'lucide-react';
+import { CalendarPlus, CheckCircle2, Clock3, Video, Briefcase } from 'lucide-react';
 import type { ElementType } from 'react';
-import { StatusBadge } from '@/components/StatusBadge';
 import { useCollection } from '@/hooks/useCollection';
 import type { Candidate, Interview } from '@/types';
 
@@ -22,65 +21,126 @@ export default function InterviewsPage() {
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_0.7fr]">
-      <section className="panel overflow-hidden bg-[#FCFCFF] border border-[#ECEAFB] rounded-[32px] shadow-[0_8px_30px_rgba(91,79,233,0.08)]">
-        <div className="border-b border-stone-200 p-5">
-          <h2 className="text-[22px] font-black tracking-tight text-[#151633]">Interview schedule</h2>
-          <p className="mt-1 text-sm text-[#6D6B8D]">Track stage, interviewer, mode, and feedback state.</p>
-        </div>
-        <div className="divide-y divide-stone-100">
-          {interviews.map((interview) => (
-            <article
-  key={interview.id}
-  className="p-5 hover:bg-[#FAFAFD] transition-all duration-300"
->
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-[20px] font-black tracking-tight text-[#151633]">{interview.candidateName}</h3>
-                    <StatusBadge value={interview.status} />
-                  </div>
-                  <p className="mt-1 text-sm text-stone-500">{interview.jobTitle} · {interview.stage}</p>
-                </div>
-                <select className="input w-44 rounded-2xl" value={interview.status} onChange={(event) => void updateItem(interview.id, { status: event.target.value as Interview['status'] })}>
-                  <option>Scheduled</option>
-                  <option>Feedback Due</option>
-                  <option>Completed</option>
-                </select>
-              </div>
-              <div className="mt-4 grid gap-3 text-sm md:grid-cols-4">
-                <Info icon={Clock3} label="Time" value={interview.scheduledAt.replace('T', ' ')} />
-                <Info icon={Video} label="Mode" value={interview.mode} />
-                <Info icon={CheckCircle2} label="Interviewer" value={interview.interviewer} />
-                <Info icon={CalendarPlus} label="Candidate ID" value={interview.candidateId} />
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+    <div className="space-y-12 w-full mx-auto">
+      {/* Page Header */}
+      <header className="border-b border-[#ECE8E2] pb-8 mb-8">
+        <p className="folio-mono text-[10px] uppercase tracking-[0.2em] text-brand-lavender mb-2 font-bold">
+          Interview Management
+        </p>
+        <h1 className="folio-heading text-4xl md:text-5xl font-light text-brand-navy leading-tight tracking-tight">
+          Interview Calendar
+        </h1>
+        <p className="mt-4 text-[#6D6B8D] font-sans text-base max-w-2xl leading-relaxed">
+          Calibrate candidate interview stages, review feedback indicators, and schedule assessments for active pipeline candidates.
+        </p>
+      </header>
 
-      <section className="panel h-fit p-6 bg-[#FCFCFF] border border-[#ECEAFB] rounded-[32px] shadow-[0_8px_30px_rgba(91,79,233,0.08)]">        <h2 className="text-lg font-black">Ready to schedule</h2>
-        <p className="mt-1 text-sm text-stone-500">Shortlisted and interviewing candidates can be pushed into the calendar.</p>
-        <div className="mt-4 space-y-3">
-          {candidates
-            .filter((candidate) => ['Shortlisted', 'Interviewing'].includes(candidate.status))
-            .map((candidate) => (
-              <div key={candidate.id} className="rounded-[24px] border border-[#ECEAFB] bg-white p-5 shadow-sm hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="font-black">{candidate.name}</div>
-                    <div className="mt-1 text-sm text-stone-500">{candidate.jobTitle}</div>
+      {/* Main Content Grid */}
+      <div className="grid gap-8 lg:grid-cols-[1.25fr_0.75fr]">
+        {/* Left Column: Interview Schedule List */}
+        <section className="rounded-2xl border border-[#ECE8E2] bg-white p-8 h-fit shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
+          <div className="mb-6 border-b border-[#ECE8E2] pb-5">
+            <h2 className="font-sans font-bold text-xl text-brand-navy">Interview Schedule</h2>
+            <p className="mt-1 folio-mono text-[9px] text-[#6D6B8D] uppercase tracking-wider font-bold">Track stage, interviewer, mode, and assessment state.</p>
+          </div>
+          
+          <div className="divide-y divide-[#ECE8E2]">
+            {interviews.map((interview) => {
+              const statusColor = 
+                interview.status === 'Scheduled' || interview.status === 'Feedback Due'
+                  ? 'bg-brand-orange'
+                  : 'bg-brand-mint';
+
+              return (
+                <article key={interview.id} className="py-6 first:pt-0 last:pb-0">
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="flex-1 min-w-[260px]">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-navy text-white text-xs font-sans font-bold flex-shrink-0">
+                          {interview.candidateName.charAt(0)}
+                        </div>
+                        <h3 className="font-sans font-bold text-brand-navy text-base leading-tight">
+                          {interview.candidateName}
+                        </h3>
+                        <span className="flex items-center gap-1.5">
+                          <span className={`h-1.5 w-1.5 rounded-full ${statusColor}`} />
+                          <span className="folio-mono text-[9px] uppercase tracking-[0.1em] text-[#6D6B8D] font-bold leading-none">
+                            {interview.status}
+                          </span>
+                        </span>
+                      </div>
+                      <div className="mt-2.5 flex items-center gap-1.5 text-xs text-[#6D6B8D] font-sans pl-11">
+                        <Briefcase className="h-3.5 w-3.5 opacity-70" strokeWidth={1.5} />
+                        <span>{interview.jobTitle}</span>
+                        <span>·</span>
+                        <span className="font-bold text-brand-navy">{interview.stage} Interview</span>
+                      </div>
+                    </div>
+                    
+                    {/* Selector Status Control */}
+                    <div className="flex-shrink-0">
+                      <select 
+                        className="folio-mono text-[10px] uppercase font-bold text-brand-navy border border-[#ECE8E2] rounded-xl bg-white px-3.5 py-2.5 outline-none transition cursor-pointer hover:border-brand-purple min-w-[130px]" 
+                        value={interview.status} 
+                        onChange={(event) => void updateItem(interview.id, { status: event.target.value as Interview['status'] })}
+                      >
+                        <option>Scheduled</option>
+                        <option>Feedback Due</option>
+                        <option>Completed</option>
+                      </select>
+                    </div>
                   </div>
-                  <StatusBadge value={candidate.status} />
+
+                  <div className="mt-6 pt-4 border-t border-[#ECE8E2]/60 grid gap-4 text-xs sm:grid-cols-4 pl-11">
+                    <Info icon={Clock3} label="Time" value={interview.scheduledAt.replace('T', ' ')} />
+                    <Info icon={Video} label="Mode" value={interview.mode} />
+                    <Info icon={CheckCircle2} label="Interviewer" value={interview.interviewer} />
+                    <Info icon={CalendarPlus} label="Candidate ID" value={`#${interview.candidateId.substring(0, 8)}`} />
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Right Column: Ready to Schedule list */}
+        <section className="rounded-2xl border border-[#ECE8E2] bg-white p-8 h-fit shadow-[0_4px_20px_rgba(0,0,0,0.01)]">
+          <div className="mb-6 border-b border-[#ECE8E2] pb-5">
+            <h2 className="font-sans font-bold text-xl text-brand-navy">Ready to Schedule</h2>
+            <p className="mt-1 folio-mono text-[9px] text-[#6D6B8D] uppercase tracking-wider font-bold">Shortlisted and active candidates.</p>
+          </div>
+          <div className="space-y-4">
+            {candidates
+              .filter((candidate) => ['Shortlisted', 'Interviewing'].includes(candidate.status))
+              .map((candidate) => (
+                <div key={candidate.id} className="rounded-xl border border-[#ECE8E2] bg-white p-5 hover:border-brand-purple transition-all duration-300 card-hover">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-navy text-white text-xs font-sans font-bold flex-shrink-0">
+                        {candidate.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="font-sans font-bold text-brand-navy text-base leading-tight">{candidate.name}</div>
+                        <div className="mt-1 text-xs text-[#6D6B8D] font-sans">{candidate.jobTitle}</div>
+                      </div>
+                    </div>
+                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-md bg-stone-50 px-2 py-0.5 folio-mono text-[8px] font-bold text-brand-orange border border-[#ECE8E2] uppercase">
+                      {candidate.status}
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => void scheduleForCandidate(candidate)} 
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[#ECE8E2] bg-stone-50/50 px-4 py-2.5 text-xs font-bold text-brand-navy hover:border-brand-purple hover:bg-brand-purple hover:text-white transition-all duration-150 cursor-pointer" 
+                    type="button"
+                  >
+                    <CalendarPlus className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    Schedule Interview
+                  </button>
                 </div>
-                <button onClick={() => void scheduleForCandidate(candidate)} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-[#ECEAFB] bg-white px-4 py-3 font-semibold text-[#151633] hover:border-[#5B4FE9] hover:text-[#5B4FE9] transition-all duration-300" type="button">
-                  <CalendarPlus className="h-4 w-4" />
-                  Schedule interview
-                </button>
-              </div>
-            ))}
-        </div>
-      </section>
+              ))}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
@@ -88,10 +148,10 @@ export default function InterviewsPage() {
 function Info({ icon: Icon, label, value }: { icon: ElementType; label: string; value: string }) {
   return (
     <div className="flex items-start gap-2">
-      <Icon className="mt-0.5 h-4 w-4 text-emerald-700" />
+      <Icon className="mt-0.5 h-3.5 w-3.5 text-brand-lavender" strokeWidth={1.5} />
       <div>
-        <div className="text-xs font-bold uppercase text-[#9D9AB8]">{label}</div>
-        <div className="mt-1 font-semibold">{value}</div>
+        <div className="folio-label text-[9px] uppercase tracking-[0.15em] text-[#6D6B8D] font-bold">{label}</div>
+        <div className="mt-1 folio-mono text-xs font-bold text-brand-navy">{value}</div>
       </div>
     </div>
   );

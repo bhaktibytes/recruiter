@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BriefcaseBusiness, CheckCircle2, KeyRound, ShieldCheck, Users } from 'lucide-react';
 import { useAuth } from '@/contexts/useAuth';
 import { roleCredentials } from '@/data/seed';
 import { Role } from '@/types';
@@ -26,88 +25,115 @@ export default function LoginPage() {
     event.preventDefault();
     const isAuthenticated = login(email, password, role);
     if (!isAuthenticated) {
-      setError('Use one of the seeded credential sets shown on this screen.');
+      setError('Use one of the seeded credential sets shown below.');
       return;
     }
     navigate('/');
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#e1f3ea_0,#f7f7f2_38%,#eef3f5_100%)] p-6">
-      <div className="mx-auto grid min-h-[calc(100vh-3rem)] max-w-6xl items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <section className="space-y-8">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/70 px-3 py-1 text-sm font-semibold text-emerald-800">
-            <BriefcaseBusiness className="h-4 w-4" />
-            RecruiterOS
-          </div>
-          <div>
-            <h1 className="max-w-2xl text-4xl font-black leading-tight text-stone-950 sm:text-5xl">
-              Hiring operations, from role intake to offer approval.
-            </h1>
-            <p className="mt-4 max-w-xl text-base leading-7 text-stone-600">
-              Manage requisitions, candidate movement, interviews, campus drives, and notifications from one local-first workspace.
-            </p>
-          </div>
-          <div className="grid max-w-2xl gap-3 sm:grid-cols-3">
-            {roles.map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => selectRole(item)}
-                className={`rounded-lg border p-4 text-left transition ${
-                  role === item ? 'border-emerald-700 bg-emerald-50 text-emerald-950' : 'border-stone-200 bg-white/70 text-stone-700 hover:bg-white'
-                }`}
-              >
-                <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-md bg-white shadow-sm">
-                  {item === 'Admin' ? <ShieldCheck className="h-5 w-5" /> : item === 'Hiring Manager' ? <Users className="h-5 w-5" /> : <KeyRound className="h-5 w-5" />}
-                </div>
-                <div className="text-sm font-bold">{item}</div>
-                <div className="mt-1 text-xs text-stone-500">{roleCredentials[item].email}</div>
-              </button>
-            ))}
-          </div>
-        </section>
+    <div className="min-h-screen bg-[#F2EFEA] flex flex-col items-center justify-center p-6 text-brand-navy">
+      {/* Brand Header */}
+      <div className="mb-8 flex flex-col items-center gap-3 text-center">
+        <div className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm border border-[#ECE8E2]">
+          <span className="h-8 w-8 rounded-full bg-gradient-to-tr from-[#5B4FE9] to-[#FF6B35] flex items-center justify-center">
+            <span className="h-2.5 w-2.5 rounded-full bg-white" />
+          </span>
+        </div>
+        <h1 className="font-serif text-3xl font-light text-brand-navy tracking-tight mt-1">
+          Sign in to RecruiterOS
+        </h1>
+        <p className="folio-mono text-[9px] uppercase tracking-[0.2em] text-[#6D6B8D] font-bold">
+          Workspace authentication
+        </p>
+      </div>
 
-        <section className="panel p-6 sm:p-8">
-          <div className="mb-6">
-            <h2 className="text-2xl font-black text-stone-950">Sign in</h2>
-            <p className="mt-1 text-sm text-stone-500">Seeded credentials are prefilled by role.</p>
-          </div>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <label className="block text-sm font-semibold text-stone-700">
-              Email
-              <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" className="input mt-1" />
+      {/* Login Form Container Card */}
+      <div className="bg-white border border-[#ECE8E2] rounded-2xl p-8 shadow-[0_10px_35px_-10px_rgba(21,22,51,0.04)] max-w-md w-full">
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div>
+            <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
+              Email Address
             </label>
-            <label className="block text-sm font-semibold text-stone-700">
+            <input 
+              type="email" 
+              value={email} 
+              onChange={(event) => setEmail(event.target.value)} 
+              className="input" 
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
               Password
-              <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" className="input mt-1" />
             </label>
-            <label className="block text-sm font-semibold text-stone-700">
-              Role
-              <select value={role} onChange={(event) => selectRole(event.target.value as Role)} className="input mt-1">
-                {roles.map((item) => (
-                  <option key={item} value={item}>{item}</option>
-                ))}
-              </select>
-            </label>
-            {error && <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</div>}
-            <button type="submit" className="button-primary w-full">
-              <CheckCircle2 className="h-4 w-4" />
-              Enter workspace
-            </button>
-          </form>
-          <div className="mt-6 rounded-lg bg-stone-50 p-4 text-sm text-stone-600">
-            <div className="font-bold text-stone-800">Seed users</div>
-            <div className="mt-2 space-y-1">
-              {roles.map((item) => (
-                <div key={item} className="flex items-center justify-between gap-3">
-                  <span>{item}</span>
-                  <code className="text-xs">{roleCredentials[item].password}</code>
-                </div>
-              ))}
-            </div>
+            <input 
+              type="password" 
+              value={password} 
+              onChange={(event) => setPassword(event.target.value)} 
+              className="input" 
+              placeholder="8+ characters"
+              required
+            />
           </div>
-        </section>
+
+          <div>
+            <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
+              Workspace Role
+            </label>
+            <select 
+              value={role} 
+              onChange={(event) => selectRole(event.target.value as Role)} 
+              className="w-full rounded-xl border border-[#ECE8E2] bg-white px-4.5 py-3 text-sm font-semibold text-brand-navy outline-none transition duration-150 focus:border-[#5B4FE9] cursor-pointer"
+            >
+              {roles.map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          </div>
+
+          {error && (
+            <div className="rounded-xl border border-rose-200 bg-rose-50/50 px-4 py-3 text-xs font-semibold text-rose-700">
+              {error}
+            </div>
+          )}
+
+          <button 
+            type="submit" 
+            className="button-primary w-full py-3.5 mt-2 flex items-center justify-center font-bold hover:bg-[#FF6B35] transition duration-150 cursor-pointer"
+          >
+            Enter workspace
+          </button>
+        </form>
+
+        <div className="relative my-6.5">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-[#ECE8E2]" />
+          </div>
+          <div className="relative flex justify-center text-[9px] font-bold uppercase tracking-widest folio-mono">
+            <span className="bg-white px-3 text-[#6D6B8D]">or prefill credentials</span>
+          </div>
+        </div>
+
+        {/* Clickable Quick Role Prefills */}
+        <div className="grid grid-cols-3 gap-2.5">
+          {roles.map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => selectRole(item)}
+              className={`rounded-xl border py-2.5 text-center transition duration-150 cursor-pointer ${
+                role === item 
+                  ? 'border-brand-purple bg-brand-purple/5 text-brand-purple font-bold' 
+                  : 'border-[#ECE8E2] bg-white text-stone-500 hover:bg-stone-50 hover:border-stone-300'
+              }`}
+            >
+              <div className="text-[11px] font-bold tracking-tight">{item}</div>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

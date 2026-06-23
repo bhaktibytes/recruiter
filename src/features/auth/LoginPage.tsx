@@ -9,23 +9,23 @@ const roles: Role[] = ['Recruiter', 'Hiring Manager', 'Admin'];
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [role, setRole] = useState<Role>('Recruiter');
-  const [email, setEmail] = useState(roleCredentials.Recruiter.email);
-  const [password, setPassword] = useState(roleCredentials.Recruiter.password);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
-  const selectRole = (nextRole: Role) => {
-    setRole(nextRole);
-    setEmail(roleCredentials[nextRole].email);
-    setPassword(roleCredentials[nextRole].password);
-    setError('');
-  };
 
   const handleLogin = (event: React.FormEvent) => {
     event.preventDefault();
-    const isAuthenticated = login(email, password, role);
+    // Auto-detect role from email to avoid requiring a dropdown
+    let resolvedRole: Role = 'Recruiter';
+    if (email.trim().toLowerCase().includes('manager')) {
+      resolvedRole = 'Hiring Manager';
+    } else if (email.trim().toLowerCase().includes('admin')) {
+      resolvedRole = 'Admin';
+    }
+
+    const isAuthenticated = login(email, password, resolvedRole);
     if (!isAuthenticated) {
-      setError('Use one of the seeded credential sets shown below.');
+      setError('Use recruiter@demo.com, manager@demo.com, or admin@demo.com');
       return;
     }
     navigate('/');
@@ -37,126 +37,112 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F2EFEA] flex flex-col items-center justify-center p-6 text-brand-navy font-sans">
+    <div className="min-h-screen bg-[#F4F1EA] flex flex-col items-center justify-center p-6 text-brand-navy font-sans">
       {/* Brand Header */}
-      <div className="mb-8 flex flex-col items-center gap-3 text-center">
-        <div className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm border border-[#ECE8E2]">
-          <span className="h-8 w-8 rounded-full bg-gradient-to-tr from-[#5B4FE9] to-[#FF6B35] flex items-center justify-center">
-            <span className="h-2.5 w-2.5 rounded-full bg-white" />
-          </span>
+      <div className="mb-6 flex flex-col items-center gap-2.5 text-center">
+        <div className="flex items-center gap-2">
+          <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm border border-[#ECE8E2]">
+            <span className="h-5.5 w-5.5 rounded-full bg-gradient-to-tr from-[#5B4FE9] to-[#FF6B35] flex items-center justify-center">
+              <span className="h-1.5 w-1.5 rounded-full bg-white" />
+            </span>
+          </div>
+          <span className="font-serif text-xl font-bold text-brand-navy tracking-tight">Folio</span>
         </div>
-        <h1 className="font-serif text-3xl font-light text-brand-navy tracking-tight mt-1">
-          Sign in to RecruiterOS
+        <h1 className="font-sans text-2xl font-semibold text-brand-navy tracking-tight mt-2">
+          Sign in to Folio
         </h1>
-        <p className="folio-mono text-[9px] uppercase tracking-[0.2em] text-[#6D6B8D] font-bold">
-          Workspace authentication
-        </p>
       </div>
 
-      {/* Login Form Container Card */}
-      <div className="bg-white border border-[#ECE8E2] rounded-2xl p-8 shadow-[0_10px_35px_-10px_rgba(21,22,51,0.04)] max-w-md w-full">
-        {/* Direct Recruiter Access */}
-        <button 
-          type="button" 
-          onClick={loginAsRecruiterDirectly}
-          className="w-full mb-6 py-3.5 px-4 rounded-xl text-white font-bold bg-[#151633] hover:bg-[#242656] flex items-center justify-center gap-2 shadow-md transition duration-150 cursor-pointer border border-white/10"
-        >
-          <span>Login as Recruiter</span>
-          <span className="text-[9px] font-bold tracking-wide bg-brand-purple text-white px-2.5 py-0.5 rounded-full uppercase">Instant Redirect</span>
-        </button>
-
-        <div className="relative my-5">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#ECE8E2]" />
-          </div>
-          <div className="relative flex justify-center text-[9px] font-bold uppercase tracking-widest folio-mono">
-            <span className="bg-white px-3 text-[#6D6B8D]">or standard login</span>
-          </div>
-        </div>
-
-        <form onSubmit={handleLogin} className="space-y-5">
+      {/* Login Card */}
+      <div className="bg-white border border-[#ECE8E2] rounded-2xl p-8 shadow-[0_4px_25px_-5px_rgba(21,22,51,0.03)] max-w-sm w-full space-y-5">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
-              Email Address
+            <label className="block text-xs font-semibold text-stone-700 mb-1">
+              Email
             </label>
             <input 
               type="email" 
               value={email} 
               onChange={(event) => setEmail(event.target.value)} 
-              className="input" 
+              className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:border-[#5B4FE9] text-xs font-sans placeholder-stone-400" 
               placeholder="you@example.com"
               required
             />
           </div>
 
           <div>
-            <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
+            <label className="block text-xs font-semibold text-stone-700 mb-1">
               Password
             </label>
             <input 
               type="password" 
               value={password} 
               onChange={(event) => setPassword(event.target.value)} 
-              className="input" 
+              className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 focus:outline-none focus:border-[#5B4FE9] text-xs font-sans placeholder-stone-400" 
               placeholder="8+ characters"
               required
             />
-          </div>
-
-          <div>
-            <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
-              Workspace Role
-            </label>
-            <select 
-              value={role} 
-              onChange={(event) => selectRole(event.target.value as Role)} 
-              className="input cursor-pointer"
-            >
-              {roles.map((item) => (
-                <option key={item} value={item}>{item}</option>
-              ))}
-            </select>
+            <div className="text-right mt-1.5">
+              <a href="#" className="text-[11px] text-[#5B4FE9] font-semibold hover:underline">
+                Forgot password?
+              </a>
+            </div>
           </div>
 
           {error && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50/50 px-4 py-3 text-xs font-semibold text-rose-700">
+            <div className="rounded-xl border border-rose-200 bg-rose-50/50 px-4 py-2.5 text-[11px] font-semibold text-rose-700">
               {error}
             </div>
           )}
 
           <button 
             type="submit" 
-            className="button-primary w-full py-3.5 mt-2 flex items-center justify-center font-bold hover:bg-[#FF6B35] transition duration-150 cursor-pointer"
+            className="w-full py-3 mt-2 rounded-xl text-white font-semibold bg-[#5B4FE9] hover:bg-[#4a3fd4] transition duration-150 cursor-pointer text-xs flex items-center justify-center"
           >
-            Enter workspace
+            Sign in
           </button>
         </form>
 
-        <div className="relative my-6.5">
+        <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#ECE8E2]" />
+            <div className="w-full border-t border-stone-100" />
           </div>
-          <div className="relative flex justify-center text-[9px] font-bold uppercase tracking-widest folio-mono">
-            <span className="bg-white px-3 text-[#6D6B8D]">or prefill credentials</span>
+          <div className="relative flex justify-center text-[10px] text-stone-400">
+            <span className="bg-white px-2">or</span>
           </div>
         </div>
 
-        {/* Clickable Quick Role Prefills */}
-        <div className="grid grid-cols-3 gap-2.5">
-          {roles.map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => selectRole(item)}
-              className={`rounded-xl border py-2.5 text-center transition duration-150 cursor-pointer ${
-                role === item 
-                  ? 'border-brand-purple bg-brand-purple/5 text-brand-purple font-bold' 
-                  : 'border-[#ECE8E2] bg-white text-stone-500 hover:bg-stone-50 hover:border-stone-300'
-              }`}
+        {/* Google Authentication */}
+        <button 
+          type="button"
+          onClick={loginAsRecruiterDirectly}
+          className="w-full py-3 rounded-xl border border-stone-200 hover:bg-stone-50 bg-white transition duration-150 cursor-pointer text-xs font-semibold flex items-center justify-center gap-2"
+        >
+          <svg className="h-4 w-4" viewBox="0 0 24 24">
+            <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114-3.478 0-6.3-2.822-6.3-6.3s2.822-6.3 6.3-6.3c1.554 0 2.978.567 4.084 1.503l3.056-3.056C19.348 2.76 15.996 1.5 12.24 1.5 6.308 1.5 1.5 6.308 1.5 12.24s4.808 10.74 10.74 10.74c6.208 0 10.323-4.364 10.323-10.5 0-.709-.082-1.396-.24-2.083h-10.083z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        {/* Links */}
+        <div className="flex flex-col items-center gap-2 pt-2 text-xs text-stone-500 font-sans">
+          <div>
+            <span>No account? </span>
+            <a href="#" onClick={(e) => { e.preventDefault(); loginAsRecruiterDirectly(); }} className="text-[#5B4FE9] font-semibold hover:underline">
+              Sign up
+            </a>
+          </div>
+          
+          <div className="text-[11px]">
+            <span>Are you a Recruiter? </span>
+            <button 
+              type="button" 
+              onClick={loginAsRecruiterDirectly} 
+              className="text-[#5B4FE9] font-semibold hover:underline cursor-pointer"
             >
-              <div className="text-[11px] font-bold tracking-tight">{item}</div>
+              Instant Login (Demo)
             </button>
-          ))}
+          </div>
         </div>
       </div>
     </div>

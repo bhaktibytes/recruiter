@@ -5,6 +5,15 @@ import type { CampusDrive } from '@/types';
 export default function CampusPage() {
   const { items: drives, updateItem } = useCollection<CampusDrive>('campusDrives');
 
+  const formatCampusDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return dateString;
+    }
+  };
+
   const activeDrives = drives.filter((d) => d.status === 'Live').length;
   const totalRegistrations = drives.reduce((sum, d) => sum + d.registrations, 0);
   const totalShortlisted = drives.reduce((sum, d) => sum + d.shortlisted, 0);
@@ -120,7 +129,7 @@ export default function CampusPage() {
                         <span>{drive.role}</span>
                         <span>·</span>
                         <CalendarDays className="h-3.5 w-3.5 opacity-75" strokeWidth={1.5} />
-                        <span>{drive.date}</span>
+                        <span className="folio-mono text-xs font-semibold text-brand-navy">{formatCampusDate(drive.date)}</span>
                       </div>
                     </div>
                     
@@ -132,7 +141,7 @@ export default function CampusPage() {
                         </span>
                       </span>
                       <select 
-                        className="folio-mono text-[10px] uppercase font-bold text-brand-navy border border-[#ECE8E2] rounded-xl bg-white px-3 py-2 outline-none transition cursor-pointer hover:border-brand-purple" 
+                        className="input py-2 text-xs font-bold folio-mono uppercase cursor-pointer max-w-[130px]" 
                         value={drive.status} 
                         onChange={(event) => void updateItem(drive.id, { status: event.target.value as CampusDrive['status'] })}
                       >

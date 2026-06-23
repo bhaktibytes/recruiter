@@ -86,7 +86,7 @@ export default function LoginPage() {
             <select 
               value={role} 
               onChange={(event) => selectRole(event.target.value as Role)} 
-              className="w-full rounded-xl border border-[#ECE8E2] bg-white px-4.5 py-3 text-sm font-semibold text-brand-navy outline-none transition duration-150 focus:border-[#5B4FE9] cursor-pointer"
+              className="input cursor-pointer"
             >
               {roles.map((item) => (
                 <option key={item} value={item}>{item}</option>

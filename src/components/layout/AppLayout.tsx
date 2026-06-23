@@ -69,7 +69,7 @@ export default function AppLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-xl px-4 py-2.5 text-[13px] font-medium transition-all duration-150 ${
                   isActive
-                    ? 'bg-white/10 text-white font-semibold'
+                    ? 'bg-[#242656] text-white font-semibold shadow-sm'
                     : 'text-stone-400 hover:bg-white/5 hover:text-white'
                 }`
               }

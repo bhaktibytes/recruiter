@@ -7,6 +7,15 @@ export default function InterviewsPage() {
   const { items: interviews, addItem, updateItem } = useCollection<Interview>('interviews');
   const { items: candidates } = useCollection<Candidate>('candidates');
 
+  const formatDateTime = (iso: string) => {
+    try {
+      const date = new Date(iso);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' · ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    } catch {
+      return iso.replace('T', ' ');
+    }
+  };
+
   const scheduleForCandidate = async (candidate: Candidate) => {
     await addItem({
       candidateId: candidate.id,
@@ -80,7 +89,7 @@ export default function InterviewsPage() {
                     {/* Selector Status Control */}
                     <div className="flex-shrink-0">
                       <select 
-                        className="folio-mono text-[10px] uppercase font-bold text-brand-navy border border-[#ECE8E2] rounded-xl bg-white px-3.5 py-2.5 outline-none transition cursor-pointer hover:border-brand-purple min-w-[130px]" 
+                        className="input py-2 text-xs font-bold folio-mono uppercase cursor-pointer max-w-[150px]" 
                         value={interview.status} 
                         onChange={(event) => void updateItem(interview.id, { status: event.target.value as Interview['status'] })}
                       >
@@ -92,7 +101,7 @@ export default function InterviewsPage() {
                   </div>
 
                   <div className="mt-6 pt-4 border-t border-[#ECE8E2]/60 grid gap-4 text-xs sm:grid-cols-4 pl-11">
-                    <Info icon={Clock3} label="Time" value={interview.scheduledAt.replace('T', ' ')} />
+                    <Info icon={Clock3} label="Time" value={formatDateTime(interview.scheduledAt)} />
                     <Info icon={Video} label="Mode" value={interview.mode} />
                     <Info icon={CheckCircle2} label="Interviewer" value={interview.interviewer} />
                     <Info icon={CalendarPlus} label="Candidate ID" value={`#${interview.candidateId.substring(0, 8)}`} />

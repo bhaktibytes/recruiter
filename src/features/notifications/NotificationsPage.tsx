@@ -5,6 +5,15 @@ import type { NotificationItem } from '@/types';
 export default function NotificationsPage() {
   const { items: notifications, updateItem } = useCollection<NotificationItem>('notifications');
 
+  const formatDateTime = (iso: string) => {
+    try {
+      const date = new Date(iso);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' · ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    } catch {
+      return iso.replace('T', ' ');
+    }
+  };
+
   return (
     <div className="space-y-12 w-full mx-auto">
       {/* Page Header */}
@@ -143,7 +152,7 @@ export default function NotificationsPage() {
                       {/* Selector control */}
                       <div className="flex-shrink-0">
                         <select 
-                          className="folio-mono text-[10px] uppercase font-bold text-brand-navy border border-[#ECE8E2] rounded-xl bg-white px-3 py-2 outline-none transition cursor-pointer hover:border-brand-purple min-w-[130px]" 
+                          className="input py-2 text-xs font-bold folio-mono uppercase cursor-pointer max-w-[130px]" 
                           value={item.status} 
                           onChange={(event) => void updateItem(item.id, { status: event.target.value as NotificationItem['status'] })}
                         >
@@ -158,7 +167,7 @@ export default function NotificationsPage() {
                     <div className="mt-5 pt-3 border-t border-[#ECE8E2]/60 grid gap-4 items-center sm:grid-cols-[1.1fr_1.1fr_1.1fr_0.7fr] pb-1">
                       <QueueInfo label="Channel" value={item.channel} />
                       <QueueInfo label="Audience" value={item.audience} />
-                      <QueueInfo label="Send at" value={item.sendAt.replace('T', ' ')} />
+                      <QueueInfo label="Send at" value={formatDateTime(item.sendAt)} />
                       <div className="flex justify-end">
                         <button 
                           className="folio-mono text-[10px] font-bold uppercase tracking-wider text-white bg-brand-purple hover:bg-brand-orange px-4 py-2.5 rounded-xl transition flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto" 

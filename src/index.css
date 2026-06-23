@@ -83,7 +83,7 @@
   }
 
   .input {
-    @apply w-full rounded-xl border border-[#ECE8E2] bg-white px-4.5 py-3 text-sm text-[#151633] placeholder-stone-400 outline-none transition duration-150 focus:border-[#5B4FE9] focus:ring-1 focus:ring-[#5B4FE9]/10;
+    @apply w-full rounded-xl border border-[#ECE8E2] bg-white px-4 py-3 text-sm text-[#151633] placeholder-stone-400 outline-none transition duration-150 focus:border-[#5B4FE9] focus:ring-1 focus:ring-[#5B4FE9]/10;
   }
 
   select.input, select.select-custom {

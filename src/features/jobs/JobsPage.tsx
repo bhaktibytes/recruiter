@@ -120,7 +120,7 @@ export default function JobsPage() {
                   Type
                 </label>
                 <select 
-                  className="w-full rounded-xl border border-[#ECE8E2] bg-white px-3.5 py-3 text-sm font-semibold text-brand-navy outline-none cursor-pointer focus:border-[#5B4FE9]" 
+                  className="input cursor-pointer" 
                   value={form.type} 
                   onChange={(event) => setForm({ ...form, type: event.target.value as Job['type'] })}
                 >
@@ -134,7 +134,7 @@ export default function JobsPage() {
                   Priority
                 </label>
                 <select 
-                  className="w-full rounded-xl border border-[#ECE8E2] bg-white px-3.5 py-3 text-sm font-semibold text-brand-navy outline-none cursor-pointer focus:border-[#5B4FE9]" 
+                  className="input cursor-pointer" 
                   value={form.priority} 
                   onChange={(event) => setForm({ ...form, priority: event.target.value as Job['priority'] })}
                 >
@@ -212,7 +212,7 @@ export default function JobsPage() {
                     <p className="max-w-2xl text-sm leading-relaxed text-[#6D6B8D]">{job.description}</p>
                   </div>
                   <select 
-                    className="w-full sm:w-36 rounded-xl border border-[#ECE8E2] bg-white px-3.5 py-2.5 text-xs font-bold text-brand-navy outline-none cursor-pointer focus:border-[#5B4FE9] transition" 
+                    className="w-full sm:w-36 input py-2 text-xs cursor-pointer font-bold transition" 
                     value={job.status} 
                     onChange={(event) => void updateItem(job.id, { status: event.target.value as Job['status'] })}
                   >

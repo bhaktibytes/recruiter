@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Mail, 
   MapPin, 
@@ -53,10 +54,13 @@ const styles = {
 };
 
 export default function OfferManagementPage() {
+  const [searchParams] = useSearchParams();
+  const queryCandidateId = searchParams.get('candidateId');
+
   // --- Mock Data ---
   const initialCandidates: CandidateOffer[] = [
     {
-      id: '1',
+      id: 'cand-tara',
       name: 'Tara Singh',
       role: 'Frontend Engineering Intern',
       email: 'tara.singh@example.com',
@@ -79,7 +83,7 @@ export default function OfferManagementPage() {
       ]
     },
     {
-      id: '2',
+      id: 'cand-nikhil',
       name: 'Nikhil Bose',
       role: 'Product Designer',
       email: 'nikhil.bose@example.com',
@@ -102,7 +106,7 @@ export default function OfferManagementPage() {
       ]
     },
     {
-      id: '3',
+      id: 'cand-kavya',
       name: 'Kavya Rao',
       role: 'Talent Data Analyst',
       email: 'kavya.rao@example.com',
@@ -125,20 +129,20 @@ export default function OfferManagementPage() {
       ]
     },
     {
-      id: '4',
-      name: 'Maya Patel',
-      role: 'Lead UX Researcher',
-      email: 'maya.patel@example.com',
-      location: 'Bangalore',
-      matchScore: 94,
+      id: 'cand-omar',
+      name: 'Omar Siddiqui',
+      role: 'Enterprise Sales Lead',
+      email: 'omar.siddiqui@example.com',
+      location: 'Delhi NCR',
+      matchScore: 89,
       portfolioScore: 93,
       status: 'Awaiting Approval',
       statusLabel: 'Awaiting VP Sign-Off',
       baseSalary: 165000,
       equity: 0.35,
       signOnBonus: 15000,
-      skills: ['Research Operations', 'Heuristics', 'Cognitive Psychology'],
-      source: 'Internal Referral',
+      skills: ['Enterprise sales', 'CRM', 'Negotiation'],
+      source: 'LinkedIn',
       timeline: [
         { stage: 'Portfolio Evaluated', date: '12 Jun 2026', completed: true },
         { stage: 'Leadership Interview', date: '15 Jun 2026', completed: true },
@@ -162,6 +166,17 @@ export default function OfferManagementPage() {
   const [aiScore, setAiScore] = useState(94);
 
   const selectedCandidate = candidates.find(c => c.id === selectedId);
+
+  // Handle URL query parameters to auto-select candidate
+  useEffect(() => {
+    if (queryCandidateId) {
+      const match = candidates.find(c => c.id === queryCandidateId);
+      if (match) {
+        setSelectedId(queryCandidateId);
+        setDrawerOpen(true);
+      }
+    }
+  }, [queryCandidateId]);
 
   // --- Dynamic Slider Math & AI Score Calculation ---
   // Ideal terms calculated dynamically based on candidate's Portfolio Score

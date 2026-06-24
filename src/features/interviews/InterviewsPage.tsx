@@ -1,24 +1,54 @@
-import { CalendarPlus, CheckCircle2, Clock3, Video, Briefcase } from 'lucide-react';
+import { useState } from 'react';
+import { CalendarPlus, CheckCircle2, Clock3, Video, Briefcase, X } from 'lucide-react';
 import type { ElementType } from 'react';
 import { useCollection } from '@/hooks/useCollection';
 import type { Candidate, Interview } from '@/types';
 
 export default function InterviewsPage() {
   const { items: interviews, addItem, updateItem } = useCollection<Interview>('interviews');
-  const { items: candidates } = useCollection<Candidate>('candidates');
+  const { items: candidates, updateItem: updateCandidate } = useCollection<Candidate>('candidates');
 
-  const scheduleForCandidate = async (candidate: Candidate) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+
+  // Form states
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+  const [interviewer, setInterviewer] = useState('');
+  const [stage, setStage] = useState<Interview['stage']>('Technical');
+  const [mode, setMode] = useState<Interview['mode']>('Video');
+
+  const openSchedulingModal = (candidate: Candidate) => {
+    setSelectedCandidate(candidate);
+    setDate(new Date(Date.now() + 86400000).toISOString().slice(0, 10)); // Tomorrow
+    setTime('10:00');
+    setInterviewer('');
+    setStage('Technical');
+    setMode('Video');
+    setIsModalOpen(true);
+  };
+
+  const handleModalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCandidate) return;
+
     await addItem({
-      candidateId: candidate.id,
-      candidateName: candidate.name,
-      jobTitle: candidate.jobTitle,
-      interviewer: 'Hiring Panel',
-      stage: 'Technical',
-      scheduledAt: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
-      mode: 'Video',
+      candidateId: selectedCandidate.id,
+      candidateName: selectedCandidate.name,
+      jobTitle: selectedCandidate.jobTitle,
+      interviewer: interviewer || 'Hiring Panel',
+      stage,
+      scheduledAt: `${date}T${time}`,
+      mode,
       status: 'Scheduled',
     });
+
+    // Update candidate status to Interviewing
+    await updateCandidate(selectedCandidate.id, { status: 'Interviewing' });
+    setIsModalOpen(false);
+    setSelectedCandidate(null);
   };
+
 
   const formatDateTime = (iso: string) => {
     try {
@@ -149,7 +179,7 @@ export default function InterviewsPage() {
                       </span>
                     </div>
                     <button 
-                      onClick={() => void scheduleForCandidate(candidate)} 
+                      onClick={() => openSchedulingModal(candidate)} 
                       className="mt-3.5 flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#ECE8E2] bg-stone-50/50 px-4 py-2 text-xs font-bold text-brand-navy hover:border-brand-purple hover:bg-brand-purple hover:text-white transition duration-150 cursor-pointer" 
                       type="button"
                     >
@@ -162,6 +192,142 @@ export default function InterviewsPage() {
           </div>
         </section>
       </div>
+
+      {/* Interview Scheduling Modal */}
+      {isModalOpen && selectedCandidate && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center p-4">
+          <div className="bg-[#F8F6F2] rounded-2xl border border-stone-200 shadow-2xl w-full max-w-md p-6 relative animate-in fade-in zoom-in-95 duration-200 text-brand-navy">
+            {/* Modal Header */}
+            <div className="flex justify-between items-start mb-5 pb-3 border-b border-[#ECE8E2]">
+              <div>
+                <p className="folio-mono text-[9px] uppercase tracking-wider text-[#5B4FE9] font-bold">
+                  Schedule Assessment
+                </p>
+                <h3 className="font-serif text-xl font-normal text-[#1A1A2E] mt-1">
+                  Book Interview Slot
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-1 hover:bg-stone-200/50 rounded-full transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4 text-slate-500" />
+              </button>
+            </div>
+
+            {/* Candidate Context Details */}
+            <div className="bg-white rounded-xl p-3 border border-[#ECE8E2] mb-5 flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-navy text-white text-xs font-sans font-bold flex-shrink-0">
+                {selectedCandidate.name.charAt(0)}
+              </div>
+              <div>
+                <h4 className="font-sans font-bold text-xs text-brand-navy leading-tight">
+                  {selectedCandidate.name}
+                </h4>
+                <p className="text-[10px] text-[#6D6B8D] mt-0.5">
+                  {selectedCandidate.jobTitle}
+                </p>
+              </div>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={(e) => void handleModalSubmit(e)} className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Date */}
+                <div>
+                  <label className="folio-mono text-[8px] uppercase tracking-wider text-[#6D6B8D] font-bold block mb-1">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="input py-2 text-xs font-sans"
+                  />
+                </div>
+                {/* Time */}
+                <div>
+                  <label className="folio-mono text-[8px] uppercase tracking-wider text-[#6D6B8D] font-bold block mb-1">
+                    Time
+                  </label>
+                  <input
+                    type="time"
+                    required
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                    className="input py-2 text-xs font-sans"
+                  />
+                </div>
+              </div>
+
+              {/* Interview Type */}
+              <div>
+                <label className="folio-mono text-[8px] uppercase tracking-wider text-[#6D6B8D] font-bold block mb-1">
+                  Interview Type
+                </label>
+                <select
+                  value={stage}
+                  onChange={(e) => setStage(e.target.value as Interview['stage'])}
+                  className="input py-2 text-xs cursor-pointer font-bold select-custom font-sans"
+                >
+                  <option value="Recruiter Screen">Recruiter Screen</option>
+                  <option value="Technical">Technical</option>
+                  <option value="Hiring Manager">Hiring Manager</option>
+                  <option value="Culture">Culture</option>
+                </select>
+              </div>
+
+              {/* Interviewer */}
+              <div>
+                <label className="folio-mono text-[8px] uppercase tracking-wider text-[#6D6B8D] font-bold block mb-1">
+                  Interviewer Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Hiring Panel or Interviewer Name"
+                  value={interviewer}
+                  onChange={(e) => setInterviewer(e.target.value)}
+                  className="input py-2 text-xs font-sans"
+                />
+              </div>
+
+              {/* Mode */}
+              <div>
+                <label className="folio-mono text-[8px] uppercase tracking-wider text-[#6D6B8D] font-bold block mb-1">
+                  Mode
+                </label>
+                <select
+                  value={mode}
+                  onChange={(e) => setMode(e.target.value as Interview['mode'])}
+                  className="input py-2 text-xs cursor-pointer font-bold select-custom font-sans"
+                >
+                  <option value="Video">Video</option>
+                  <option value="On-site">On-site</option>
+                </select>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-3 border-t border-[#ECE8E2] flex justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="button-secondary py-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="button-primary py-2"
+                >
+                  Confirm & Schedule
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

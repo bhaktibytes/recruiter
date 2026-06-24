@@ -21,6 +21,11 @@ export interface Job {
   priority: 'Critical' | 'High' | 'Medium';
   targetDate: string;
   description: string;
+  experienceLevel?: 'Junior' | 'Mid-level' | 'Senior' | 'Lead';
+  salaryRange?: string;
+  requiredSkills?: string[];
+  certifications?: string;
+  requirementsWeights?: Record<string, number>;
 }
 
 export interface Candidate {

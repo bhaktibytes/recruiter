@@ -1,6 +1,9 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BriefcaseBusiness, Building2, CalendarClock, Gauge, LogOut, Settings2, SlidersHorizontal, UsersRound } from 'lucide-react';
+import { Bell, BriefcaseBusiness, Building2, CalendarClock, Gauge, LogOut, Settings2, SlidersHorizontal, UsersRound, Handshake } from 'lucide-react';
 import { useAuth } from '@/contexts/useAuth';
+import { useCollection } from '@/hooks/useCollection';
+import type { NotificationItem } from '@/types';
+import { useState, useRef, useEffect } from 'react';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: Gauge },
@@ -9,6 +12,7 @@ const navItems = [
   { to: '/pipeline', label: 'Candidates', icon: UsersRound },
   { to: '/interviews', label: 'Interviews', icon: CalendarClock },
   { to: '/campus', label: 'Campus Drives', icon: Building2 },
+  { to: '/offers', label: 'Offer Desk', icon: Handshake },
   { to: '/notifications', label: 'Notifications', icon: Bell },
   { to: '/admin', label: 'System Settings', icon: Settings2 },
 ];
@@ -20,6 +24,7 @@ const titles: Record<string, string> = {
   '/pipeline': 'Candidate Pipeline',
   '/interviews': 'Interview Calendar',
   '/campus': 'Campus Recruitment',
+  '/offers': 'Offer Desk',
   '/notifications': 'Notifications Center',
   '/admin': 'System Settings',
 };
@@ -28,6 +33,9 @@ export default function AppLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { items: notifications, updateItem } = useCollection<NotificationItem>('notifications');
+  const [showNotifPopover, setShowNotifPopover] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
     logout();
@@ -35,6 +43,16 @@ export default function AppLayout() {
   };
 
   const userInitial = user?.displayName ? user.displayName.charAt(0).toUpperCase() : 'A';
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        setShowNotifPopover(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F2EFEA] text-brand-navy font-sans antialiased">
@@ -121,14 +139,69 @@ export default function AppLayout() {
                 <span className="folio-mono text-[8.5px] uppercase tracking-wider text-stone-500 font-bold">{user?.role}</span>
               </div>
               
-              {/* Notifications Icon */}
-              <button 
-                onClick={() => navigate('/notifications')}
-                className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[#ECE8E2] bg-white text-brand-navy hover:bg-stone-50 transition cursor-pointer"
-              >
-                <Bell className="h-3.5 w-3.5" strokeWidth={1.5} />
-                <span className="absolute right-2.5 top-2.5 h-1 w-1 rounded-full bg-brand-orange" />
-              </button>
+              {/* Notifications Icon Popover trigger */}
+              <div className="relative" ref={popoverRef}>
+                <button 
+                  onClick={() => setShowNotifPopover(!showNotifPopover)}
+                  className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[#ECE8E2] bg-white text-brand-navy hover:bg-stone-50 transition cursor-pointer"
+                >
+                  <Bell className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  {notifications.some(n => n.status !== 'Sent') && (
+                    <span className="absolute right-2.5 top-2.5 h-1 w-1 rounded-full bg-brand-orange animate-pulse" />
+                  )}
+                </button>
+                
+                {showNotifPopover && (
+                  <div className="absolute right-0 mt-2.5 w-80 bg-white border border-[#ECE8E2] rounded-2xl p-4 shadow-xl z-30 text-xs text-brand-navy">
+                    <div className="flex items-center justify-between border-b border-[#ECE8E2] pb-2 mb-2 font-mono text-[9px] uppercase tracking-wider text-stone-500 font-bold">
+                      <span>Notifications</span>
+                      <span className="text-brand-purple">{notifications.filter(n => n.status !== 'Sent').length} Pending</span>
+                    </div>
+                    
+                    <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                      {notifications.length === 0 ? (
+                        <p className="text-stone-400 text-center py-4">No notifications found.</p>
+                      ) : (
+                        notifications.map((notif) => (
+                          <div key={notif.id} className="border-b border-stone-100 pb-2 last:border-0 last:pb-0">
+                            <div className="flex items-start justify-between gap-1.5 mb-1.5">
+                              <div>
+                                <h4 className="font-sans font-bold text-brand-navy text-[11px] leading-tight">{notif.title}</h4>
+                                <p className="text-[10px] text-stone-500 font-sans mt-0.5 leading-snug">{notif.detail}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[7.5px] font-mono text-stone-400 uppercase font-bold bg-stone-50 border border-stone-200/40 px-1 py-0.5 rounded">
+                                {notif.channel}
+                              </span>
+                              {notif.status !== 'Sent' && (
+                                <button 
+                                  onClick={() => void updateItem(notif.id, { status: 'Sent' })}
+                                  className="text-[8px] font-mono font-bold uppercase tracking-wider text-white bg-brand-purple hover:bg-brand-orange px-2 py-0.5 rounded transition duration-150 cursor-pointer"
+                                >
+                                  Send Now
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    
+                    <div className="border-t border-[#ECE8E2] pt-2 mt-2 text-center">
+                      <button 
+                        onClick={() => {
+                          setShowNotifPopover(false);
+                          navigate('/notifications');
+                        }}
+                        className="text-[9px] font-mono font-bold uppercase tracking-wider text-brand-purple hover:text-brand-orange transition"
+                      >
+                        View Notification Center →
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* User Avatar Circle */}
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-navy text-white text-[11px] font-bold font-sans border border-brand-navy/10 shadow-sm">

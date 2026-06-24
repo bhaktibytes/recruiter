@@ -11,6 +11,7 @@ import JobsPage from '@/features/jobs/JobsPage';
 import NotificationsPage from '@/features/notifications/NotificationsPage';
 import PipelinePage from '@/features/pipeline/PipelinePage';
 import RequirementBuilder from '@/features/requirements/RequirementBuilder';
+import OfferManagementPage from '@/features/offers/OfferManagementPage';
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
@@ -40,6 +41,7 @@ const router = createBrowserRouter([
       { path: 'interviews', element: <InterviewsPage /> },
       { path: 'campus', element: <CampusPage /> },
       { path: 'notifications', element: <NotificationsPage /> },
+      { path: 'offers', element: <OfferManagementPage /> },
       { path: 'admin', element: <AdminPage /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],

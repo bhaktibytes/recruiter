@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, AlertTriangle, Sparkles } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useCollection } from '@/hooks/useCollection';
 import type { Job } from '@/types';
@@ -16,28 +16,173 @@ const initialForm: JobForm = {
   priority: 'Medium',
   targetDate: '2026-07-31',
   description: '',
+  experienceLevel: 'Mid-level',
+  salaryRange: '',
+  requiredSkills: [],
+  certifications: '',
+  requirementsWeights: { Creativity: 20, Leadership: 20, Teamwork: 20, Communication: 20, 'Problem Solving': 20 }
 };
+
+const skillsList = ['Creativity', 'Leadership', 'Teamwork', 'Communication', 'Problem Solving'];
 
 export default function JobsPage() {
   const { items: jobs, addItem, updateItem } = useCollection<Job>('jobs');
   const [query, setQuery] = useState('');
   const [form, setForm] = useState<JobForm>(initialForm);
+  const [skillsInput, setSkillsInput] = useState('');
+  const [weights, setWeights] = useState<Record<string, number>>({
+    Creativity: 20,
+    Leadership: 20,
+    Teamwork: 20,
+    Communication: 20,
+    'Problem Solving': 20
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [showRequirements, setShowRequirements] = useState(false);
 
   const filteredJobs = jobs.filter((job) => 
     `${job.title} ${job.department} ${job.location}`.toLowerCase().includes(query.toLowerCase())
   );
 
+  const handleSliderChange = (changedSkill: string, newValue: number) => {
+    setWeights((current) => {
+      const oldValue = current[changedSkill] || 0;
+      const difference = newValue - oldValue;
+      const otherSkills = skillsList.filter((skill) => skill !== changedSkill);
+      const adjustment = difference / otherSkills.length;
+      const next = { ...current, [changedSkill]: newValue };
+
+      otherSkills.forEach((skill) => {
+        next[skill] = Math.max(0, (next[skill] || 0) - adjustment);
+      });
+
+      const nextTotal = Object.values(next).reduce((sum, weight) => sum + weight, 0);
+      next[otherSkills[otherSkills.length - 1]] += 100 - nextTotal;
+      return next;
+    });
+  };
+
+  const analyzeJD = (desc: string, skillsText: string) => {
+    const suggestions: string[] = [];
+    let score = 0;
+    
+    if (desc.length > 150) {
+      score += 2;
+    } else if (desc.length > 50) {
+      score += 1;
+      suggestions.push("Extend the job description to explain candidate responsibilities (min 150 chars).");
+    } else {
+      suggestions.push("Job description is too short (min 150 chars).");
+    }
+
+    const skillsCount = skillsText.split(',').map(s => s.trim()).filter(Boolean).length;
+    if (skillsCount >= 3) {
+      score += 2;
+    } else if (skillsCount >= 1) {
+      score += 1;
+      suggestions.push("Specify at least 3 required skills/tools for better matching.");
+    } else {
+      suggestions.push("Add required skills to target qualified applicants.");
+    }
+
+    const keywords = ["react", "typescript", "design", "analytics", "sql", "sales", "experience", "development", "architecture", "figma"];
+    const matches = keywords.filter(kw => desc.toLowerCase().includes(kw));
+    if (matches.length >= 3) {
+      score += 2;
+    } else if (matches.length >= 1) {
+      score += 1;
+      suggestions.push("Enrich description with technical frameworks, tools, or department keywords.");
+    } else {
+      suggestions.push("Incorporate industry-standard keywords to increase searchability.");
+    }
+
+    let rating: 'Good' | 'Average' | 'Bad' = 'Bad';
+    if (score >= 5) rating = 'Good';
+    else if (score >= 3) rating = 'Average';
+
+    return { rating, suggestions };
+  };
+
+  const detectMismatch = (title: string, dept: string, desc: string) => {
+    const d = dept.toLowerCase();
+    const t = title.toLowerCase();
+    const text = (t + " " + desc).toLowerCase();
+    
+    const designKeywords = ["figma", "sketch", "ux design", "ui design", "creative direction", "graphic design", "adobe", "illustrator", "photoshop", "portfolio"];
+    const engineeringKeywords = ["react", "typescript", "kubernetes", "docker", "c++", "backend", "frontend", "infrastructure", "python", "javascript", "developer", "engineer"];
+    
+    if (d.includes("engineering")) {
+      const conflicts = designKeywords.filter(w => text.includes(w));
+      if (conflicts.length >= 2 && !t.includes("designer")) {
+        return {
+          message: "Department is set to Engineering, but the description emphasizes design/portfolio responsibilities.",
+          conflicts
+        };
+      }
+    } else if (d.includes("design")) {
+      const conflicts = engineeringKeywords.filter(w => text.includes(w));
+      if (conflicts.length >= 2 && !t.includes("engineer") && !t.includes("developer")) {
+        return {
+          message: "Department is set to Design, but the description emphasizes engineering tasks.",
+          conflicts
+        };
+      }
+    }
+    return null;
+  };
+
   const createJob = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!form.title.trim() || !form.hiringManager.trim()) {
+    
+    const today = new Date().toISOString().slice(0, 10);
+    const newErrors: Record<string, string> = {};
+
+    if (!form.title.trim()) newErrors.title = "Job Title is required.";
+    if (!form.hiringManager.trim()) newErrors.hiringManager = "Hiring Manager is required.";
+    if (form.targetDate < today) {
+      newErrors.targetDate = "Target Date cannot be in the past.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
+    setErrors({});
+    setIsSaving(true);
+
+    // Mock network latency to prevent duplicate submissions
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    const finalSkills = skillsInput.split(',').map(s => s.trim()).filter(Boolean);
+
     await addItem({
       ...form,
+      requiredSkills: finalSkills,
+      requirementsWeights: weights,
       applicantsCount: 0,
       createdAt: new Date().toISOString().slice(0, 10),
     });
+
     setForm(initialForm);
+    setSkillsInput('');
+    setWeights({
+      Creativity: 20,
+      Leadership: 20,
+      Teamwork: 20,
+      Communication: 20,
+      'Problem Solving': 20
+    });
+    setIsSaving(false);
+  };
+
+  const mismatch = detectMismatch(form.title, form.department, form.description);
+  const jdAnalysis = analyzeJD(form.description, skillsInput);
+  const ratingColors = {
+    Good: 'text-brand-mint bg-brand-mint/5 border-brand-mint/15',
+    Average: 'text-brand-purple bg-brand-purple/5 border-brand-purple/15',
+    Bad: 'text-brand-orange bg-brand-orange/5 border-brand-orange/20',
   };
 
   return (
@@ -56,7 +201,7 @@ export default function JobsPage() {
       </header>
 
       {/* Grid Separation */}
-      <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+      <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
         {/* Left: Form Container Card (Stripe styled visual panel) */}
         <form onSubmit={createJob} className="rounded-2xl border border-stone-200/60 bg-stone-50/50 p-6 h-fit shadow-sm">
           <div className="mb-5 border-b border-[#ECE8E2] pb-4">
@@ -65,17 +210,36 @@ export default function JobsPage() {
           </div>
           
           <div className="space-y-4">
+            {/* Mismatch Warning Banner */}
+            {mismatch && (
+              <div className="rounded-xl border border-brand-orange/20 bg-brand-orange/5 p-4 text-xs">
+                <div className="flex items-center gap-1.5 font-bold text-brand-orange uppercase folio-mono mb-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span>Mismatch Warning</span>
+                </div>
+                <p className="text-stone-600 mb-2 leading-relaxed">{mismatch.message}</p>
+                <div className="flex flex-wrap gap-1 items-center mt-1">
+                  <span className="text-[9px] text-stone-400 font-mono">Conflicting:</span>
+                  {mismatch.conflicts.map(kw => (
+                    <span key={kw} className="bg-brand-orange/10 text-brand-orange text-[9px] font-mono px-1.5 py-0.5 rounded">
+                      {kw}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div>
               <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase">
                 Job Title
               </label>
               <input 
-                className="input" 
+                className={`input ${errors.title ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`}
                 value={form.title} 
                 onChange={(event) => setForm({ ...form, title: event.target.value })} 
                 placeholder="Senior React Engineer" 
-                required
               />
+              {errors.title && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.title}</p>}
             </div>
             
             <div className="grid gap-3 sm:grid-cols-2">
@@ -103,16 +267,72 @@ export default function JobsPage() {
               </div>
             </div>
 
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase">
+                  Hiring Manager
+                </label>
+                <input 
+                  className={`input ${errors.hiringManager ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`}
+                  value={form.hiringManager} 
+                  onChange={(event) => setForm({ ...form, hiringManager: event.target.value })} 
+                  placeholder="Manager name" 
+                />
+                {errors.hiringManager && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.hiringManager}</p>}
+              </div>
+
+              <div>
+                <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase">
+                  Experience Level
+                </label>
+                <select 
+                  className="input cursor-pointer font-sans"
+                  value={form.experienceLevel} 
+                  onChange={(event) => setForm({ ...form, experienceLevel: event.target.value as Job['experienceLevel'] })}
+                >
+                  <option value="Junior">Junior</option>
+                  <option value="Mid-level">Mid-level</option>
+                  <option value="Senior">Senior</option>
+                  <option value="Lead">Lead</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase">
+                  Salary Range
+                </label>
+                <input 
+                  className="input" 
+                  value={form.salaryRange} 
+                  onChange={(event) => setForm({ ...form, salaryRange: event.target.value })} 
+                  placeholder="e.g. $80,000 - $110,000" 
+                />
+              </div>
+
+              <div>
+                <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase">
+                  Certifications
+                </label>
+                <input 
+                  className="input" 
+                  value={form.certifications} 
+                  onChange={(event) => setForm({ ...form, certifications: event.target.value })} 
+                  placeholder="e.g. AWS Solutions Architect" 
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase">
-                Hiring Manager
+                Required Skills (Comma-separated)
               </label>
               <input 
                 className="input" 
-                value={form.hiringManager} 
-                onChange={(event) => setForm({ ...form, hiringManager: event.target.value })} 
-                placeholder="Manager name" 
-                required
+                value={skillsInput} 
+                onChange={(event) => setSkillsInput(event.target.value)} 
+                placeholder="React, TypeScript, CSS" 
               />
             </div>
 
@@ -150,12 +370,12 @@ export default function JobsPage() {
                   Target Date
                 </label>
                 <input 
-                  className="input cursor-pointer" 
+                  className={`input cursor-pointer ${errors.targetDate ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`}
                   type="date" 
                   value={form.targetDate} 
                   onChange={(event) => setForm({ ...form, targetDate: event.target.value })} 
-                  required
                 />
+                {errors.targetDate && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.targetDate}</p>}
               </div>
             </div>
 
@@ -164,19 +384,81 @@ export default function JobsPage() {
                 Description
               </label>
               <textarea 
-                className="input min-h-20 resize-none" 
+                className="input min-h-20 resize-none font-sans" 
                 value={form.description} 
                 onChange={(event) => setForm({ ...form, description: event.target.value })} 
                 placeholder="Job description parameters..."
               />
             </div>
 
+            {/* JD Quality Analysis Widget */}
+            {form.description.length > 0 && (
+              <div className="rounded-xl border border-[#ECE8E2] bg-white p-3.5 shadow-sm text-xs">
+                <div className="flex items-center justify-between border-b border-[#ECE8E2] pb-2 mb-2">
+                  <span className="folio-mono text-[9px] uppercase tracking-wider text-stone-500 font-bold flex items-center gap-1">
+                    <Sparkles className="h-3 w-3 text-brand-purple" />
+                    JD Quality Analysis
+                  </span>
+                  <span className={`folio-mono text-[9.5px] font-bold uppercase tracking-wider border px-2 py-0.5 rounded ${ratingColors[jdAnalysis.rating]}`}>
+                    {jdAnalysis.rating} Quality
+                  </span>
+                </div>
+                {jdAnalysis.suggestions.length > 0 ? (
+                  <ul className="space-y-1.5 text-stone-500 list-disc pl-4 text-[10.5px]">
+                    {jdAnalysis.suggestions.map((sug, idx) => (
+                      <li key={idx} className="leading-snug">{sug}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-brand-mint font-semibold text-[10.5px]">✓ Content meets standard guidelines for discovery indexing.</p>
+                )}
+              </div>
+            )}
+
+            {/* Collapsible Requirements Weights */}
+            <div className="border-t border-[#ECE8E2] pt-4 mt-4">
+              <button
+                type="button"
+                onClick={() => setShowRequirements(!showRequirements)}
+                className="flex w-full items-center justify-between text-left folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold py-1 cursor-pointer"
+              >
+                <span>Competency Weights ({showRequirements ? 'Hide' : 'Show'})</span>
+                <span className="text-brand-purple text-xs">{showRequirements ? '▲' : '▼'}</span>
+              </button>
+              
+              {showRequirements && (
+                <div className="mt-4 p-4 border border-[#ECE8E2] bg-white rounded-xl space-y-4 shadow-inner">
+                  <p className="text-[10.5px] text-stone-500 leading-normal mb-2 font-sans">
+                    Calibrate requirement weightings (Total must sum to 100%):
+                  </p>
+                  {skillsList.map((skill) => (
+                    <div key={skill} className="grid gap-2 grid-cols-[110px_1fr_45px] items-center">
+                      <span className="folio-mono text-[9px] text-brand-navy font-bold uppercase truncate">{skill}</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={weights[skill] || 0}
+                        onChange={(e) => handleSliderChange(skill, Number(e.target.value))}
+                        className="h-1 cursor-pointer appearance-none rounded-full bg-[#ECE8E2] accent-brand-purple"
+                      />
+                      <span className="folio-mono text-right text-[9.5px] font-bold text-brand-purple">
+                        {Math.round(weights[skill])}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <button 
-              className="button-primary w-full py-3.5 mt-2 flex items-center justify-center font-bold hover:bg-brand-orange transition duration-150 cursor-pointer" 
+              className="button-primary w-full py-3.5 mt-2 flex items-center justify-center font-bold hover:bg-brand-orange transition duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
               type="submit"
+              disabled={isSaving}
             >
               <Plus className="h-4 w-4" strokeWidth={2} />
-              Add requisition
+              {isSaving ? 'Adding...' : 'Add Requisition'}
             </button>
           </div>
         </form>
@@ -237,7 +519,20 @@ export default function JobsPage() {
                     <Field label="Location" value={job.location} />
                     <Field label="Applicants" value={job.applicantsCount.toString()} />
                     <Field label="Hiring Manager" value={job.hiringManager} />
+                    {job.experienceLevel && <Field label="Experience" value={job.experienceLevel} />}
+                    {job.salaryRange && <Field label="Salary Range" value={job.salaryRange} />}
+                    {job.certifications && <Field label="Certifications" value={job.certifications} />}
                   </div>
+                  {job.requiredSkills && job.requiredSkills.length > 0 && (
+                    <div className="mt-3.5 flex flex-wrap gap-1.5 items-center">
+                      <span className="folio-mono text-[8px] uppercase tracking-wider text-[#6D6B8D] font-bold">Skills:</span>
+                      {job.requiredSkills.map(skill => (
+                        <span key={skill} className="text-[9px] font-mono font-medium text-stone-500 bg-stone-50 border border-stone-200/60 px-1.5 py-0.5 rounded">
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </article>
               ))
             )}

@@ -7,6 +7,14 @@ export default {
   theme: {
     extend: {
       colors: {
+        brand: {
+          bg: '#F2EFEA',
+          navy: '#151633',
+          purple: '#5B4FE9',
+          lavender: '#A89FD6',
+          mint: '#00C9A7',
+          orange: '#FF6B35',
+        },
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',
@@ -33,7 +41,9 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['"DM Sans"', 'sans-serif'],
+        serif: ['"DM Serif Display"', 'serif'],
+        mono: ['"Space Mono"', 'monospace'],
       }
     },
   },

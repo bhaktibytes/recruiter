@@ -35,13 +35,16 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#F2EFEA] flex flex-col items-center justify-center p-6 text-brand-navy">
       {/* Brand Header */}
       <div className="mb-8 flex flex-col items-center gap-3 text-center">
-        <div className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm border border-[#ECE8E2]">
-          <span className="h-8 w-8 rounded-full bg-gradient-to-tr from-[#5B4FE9] to-[#FF6B35] flex items-center justify-center">
-            <span className="h-2.5 w-2.5 rounded-full bg-white" />
-          </span>
+        <div className="relative flex items-center justify-center w-[36px] h-[36px]">
+            <div className="absolute w-[31px] h-[30.8px] rounded-full border-[2.81px] border-[#5B4FE9]"></div>
+              <div className="relative flex items-center justify-center w-[11.25px] h-[11.25px]">
+                <div className="w-[11.25px] h-[11.25px] rounded-full bg-[#FF6B35]"></div>
+            </div>
+            
         </div>
-        <h1 className="font-serif text-3xl font-light text-brand-navy tracking-tight mt-1">
-          Sign in to RecruiterOS
+    
+        <h1 className="font-inter text-3xl font-[500] text-brand-navy tracking-tight mt-1">
+          Sign in to Folio
         </h1>
         <p className="folio-mono text-[9px] uppercase tracking-[0.2em] text-[#6D6B8D] font-bold">
           Workspace authentication
@@ -49,7 +52,7 @@ export default function LoginPage() {
       </div>
 
       {/* Login Form Container Card */}
-      <div className="bg-white border border-[#ECE8E2] rounded-2xl p-8 shadow-[0_10px_35px_-10px_rgba(21,22,51,0.04)] max-w-md w-full">
+      <div className="bg-white border border-[#ECE8E2] rounded-2xl p-10 shadow-[0_10px_35px_-10px_rgba(21,22,51,0.04)] max-w-md w-full">
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
             <label className="block folio-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold mb-2">
@@ -112,19 +115,19 @@ export default function LoginPage() {
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-[#ECE8E2]" />
           </div>
-          <div className="relative flex justify-center text-[9px] font-bold uppercase tracking-widest folio-mono">
+          <div className="relative flex justify-center mt-5 text-[9px] font-bold uppercase tracking-widest folio-mono">
             <span className="bg-white px-3 text-[#6D6B8D]">or prefill credentials</span>
           </div>
         </div>
 
         {/* Clickable Quick Role Prefills */}
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-3 gap-2.5 mt-5">
           {roles.map((item) => (
             <button
               key={item}
               type="button"
               onClick={() => selectRole(item)}
-              className={`rounded-xl border py-2.5 text-center transition duration-150 cursor-pointer ${
+              className={`rounded-xl border py-3 text-center transition duration-150 cursor-pointer ${
                 role === item 
                   ? 'border-brand-purple bg-brand-purple/5 text-brand-purple font-bold' 
                   : 'border-[#ECE8E2] bg-white text-stone-500 hover:bg-stone-50 hover:border-stone-300'

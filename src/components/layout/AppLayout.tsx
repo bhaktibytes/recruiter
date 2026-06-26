@@ -8,24 +8,21 @@ import { useState, useRef, useEffect } from 'react';
 const navItems = [
   { to: '/', label: 'Dashboard', icon: Gauge },
   { to: '/jobs', label: 'Job Posts', icon: BriefcaseBusiness },
-  { to: '/requirements', label: 'Requirements', icon: SlidersHorizontal },
   { to: '/pipeline', label: 'Candidates', icon: UsersRound },
   { to: '/interviews', label: 'Interviews', icon: CalendarClock },
   { to: '/campus', label: 'Campus Drives', icon: Building2 },
   { to: '/offers', label: 'Offer Desk', icon: Handshake },
-  { to: '/notifications', label: 'Notifications', icon: Bell },
   { to: '/admin', label: 'System Settings', icon: Settings2 },
 ];
 
 const titles: Record<string, string> = {
   '/': 'Dashboard',
   '/jobs': 'Job Requisitions',
-  '/requirements': 'Competency Blueprint',
   '/pipeline': 'Candidate Pipeline',
   '/interviews': 'Interview Calendar',
   '/campus': 'Campus Recruitment',
   '/offers': 'Offer Desk',
-  '/notifications': 'Notifications Center',
+  
   '/admin': 'System Settings',
 };
 

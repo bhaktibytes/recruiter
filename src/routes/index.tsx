@@ -10,7 +10,6 @@ import InterviewsPage from '@/features/interviews/InterviewsPage';
 import JobsPage from '@/features/jobs/JobsPage';
 import NotificationsPage from '@/features/notifications/NotificationsPage';
 import PipelinePage from '@/features/pipeline/PipelinePage';
-import RequirementBuilder from '@/features/requirements/RequirementBuilder';
 import OfferManagementPage from '@/features/offers/OfferManagementPage';
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
@@ -36,7 +35,6 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'jobs', element: <JobsPage /> },
-      { path: 'requirements', element: <RequirementBuilder /> },
       { path: 'pipeline', element: <PipelinePage /> },
       { path: 'interviews', element: <InterviewsPage /> },
       { path: 'campus', element: <CampusPage /> },

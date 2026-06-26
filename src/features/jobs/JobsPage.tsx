@@ -45,23 +45,15 @@ export default function JobsPage() {
     `${job.title} ${job.department} ${job.location}`.toLowerCase().includes(query.toLowerCase())
   );
 
-  const handleSliderChange = (changedSkill: string, newValue: number) => {
-    setWeights((current) => {
-      const oldValue = current[changedSkill] || 0;
-      const difference = newValue - oldValue;
-      const otherSkills = skillsList.filter((skill) => skill !== changedSkill);
-      const adjustment = difference / otherSkills.length;
-      const next = { ...current, [changedSkill]: newValue };
-
-      otherSkills.forEach((skill) => {
-        next[skill] = Math.max(0, (next[skill] || 0) - adjustment);
-      });
-
-      const nextTotal = Object.values(next).reduce((sum, weight) => sum + weight, 0);
-      next[otherSkills[otherSkills.length - 1]] += 100 - nextTotal;
-      return next;
-    });
-  };
+const handleSliderChange = (
+  changedSkill: string,
+  newValue: number
+) => {
+  setWeights((current) => ({
+    ...current,
+    [changedSkill]: newValue,
+  }));
+};
 
   const analyzeJD = (desc: string, skillsText: string) => {
     const suggestions: string[] = [];
@@ -267,6 +259,20 @@ export default function JobsPage() {
               </div>
             </div>
 
+            <div>
+              <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase">
+                Requirements
+              </label>
+
+              <button
+                type="button"
+                onClick={() => setShowRequirements(true)}
+                className="w-full rounded-xl border border-brand-purple/20 bg-brand-purple/5 px-4 py-3 text-sm font-semibold text-brand-purple hover:bg-brand-purple/10"
+              >
+                Configure Requirements
+              </button>
+            </div>
+
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase">
@@ -429,7 +435,7 @@ export default function JobsPage() {
               {showRequirements && (
                 <div className="mt-4 p-4 border border-[#ECE8E2] bg-white rounded-xl space-y-4 shadow-inner">
                   <p className="text-[10.5px] text-stone-500 leading-normal mb-2 font-sans">
-                    Calibrate requirement weightings (Total must sum to 100%):
+                       Rate each competency independently from 0–100.
                   </p>
                   {skillsList.map((skill) => (
                     <div key={skill} className="grid gap-2 grid-cols-[110px_1fr_45px] items-center">
@@ -441,7 +447,7 @@ export default function JobsPage() {
                         step="1"
                         value={weights[skill] || 0}
                         onChange={(e) => handleSliderChange(skill, Number(e.target.value))}
-                        className="h-1 cursor-pointer appearance-none rounded-full bg-[#ECE8E2] accent-brand-purple"
+                        className="w-full h-2 cursor-pointer accent-brand-purple"
                       />
                       <span className="folio-mono text-right text-[9.5px] font-bold text-brand-purple">
                         {Math.round(weights[skill])}%
@@ -539,6 +545,97 @@ export default function JobsPage() {
           </div>
         </section>
       </div>
+      {showRequirements && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div className="w-[700px] max-h-[85vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
+      
+      <h2 className="text-xl font-bold mb-6">
+        Requirements Builder
+      </h2>
+
+    {skillsList.map((skill) => (
+  <div key={skill} className="mb-5">
+  <div className="flex justify-between mb-2">
+    <span>{skill}</span>
+    <span>{weights[skill]}%</span>
+  </div>
+
+  <div className="flex items-center gap-3">
+
+    <button
+      type="button"
+      onClick={() =>
+        handleSliderChange(skill, Math.max(0, weights[skill] - 5))
+      }
+      className="h-8 w-8 rounded-full border"
+    >
+      -
+    </button>
+
+    <div className="relative flex-1">
+      <div className="h-2 w-full rounded-full bg-gray-200">
+        <div
+          className="h-2 rounded-full bg-brand-purple"
+          style={{
+            width: `${weights[skill]}%`,
+          }}
+        />
+      </div>
+
+      <input
+        type="range"
+        min="0"
+        max="100"
+        value={weights[skill]}
+        onChange={(e) =>
+          handleSliderChange(skill, Number(e.target.value))
+        }
+        className="absolute inset-0 w-full opacity-0 cursor-pointer"
+      />
+    </div>
+
+    <button
+      type="button"
+      onClick={() =>
+        handleSliderChange(skill, Math.min(100, weights[skill] + 5))
+      }
+      className="h-8 w-8 rounded-full border"
+    >
+      +
+    </button>
+
+  </div>
+</div>
+  
+))}
+
+      <div className="mt-8 flex justify-end gap-3">
+        <button
+          type="button"
+          onClick={() => setShowRequirements(false)}
+          className="rounded-lg border px-4 py-2"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setForm({
+              ...form,
+              requirementsWeights: weights,
+            });
+
+            setShowRequirements(false);
+          }}
+          className="rounded-lg bg-brand-purple px-5 py-2 text-white"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+)}``  
     </div>
   );
 }

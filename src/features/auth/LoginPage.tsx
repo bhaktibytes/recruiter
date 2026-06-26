@@ -35,13 +35,23 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#F2EFEA] flex flex-col items-center justify-center p-6 text-brand-navy">
       {/* Brand Header */}
       <div className="mb-8 flex flex-col items-center gap-3 text-center">
-        <div className="relative flex items-center justify-center w-[36px] h-[36px]">
-            <div className="absolute w-[31px] h-[30.8px] rounded-full border-[2.81px] border-[#5B4FE9]"></div>
-              <div className="relative flex items-center justify-center w-[11.25px] h-[11.25px]">
-                <div className="w-[11.25px] h-[11.25px] rounded-full bg-[#FF6B35]"></div>
-            </div>
-            
-        </div>
+        <div className="mb-1 flex items-center justify-center gap-2">
+        <div className="relative flex-shrink-0 w-9 h-9 flex items-center justify-center">
+          <div className="absolute inset-0.5 rounded-full border-[3.5px] border-[#5B4FE9]" />
+          <div className="w-3 h-3 rounded-full bg-[#FF6B35]" />
+      </div>
+      <h1
+        style={{
+          fontFamily: "'DM Serif Display', serif",
+          fontSize: "23.4px",
+          lineHeight: 1,
+          fontWeight: 400,
+        }}
+      >
+        <span style={{ color: "#18162A" }}>Fo</span>
+        <span style={{ color: "#6554F5" }}>lio</span>
+      </h1>
+    </div>
     
         <h1 className="font-inter text-3xl font-[500] text-brand-navy tracking-tight mt-1">
           Sign in to Folio

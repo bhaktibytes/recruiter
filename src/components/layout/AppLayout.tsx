@@ -54,65 +54,72 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-[#F2EFEA] text-brand-navy font-sans antialiased">
       {/* Desktop Sidebar (Figma Proportions: 225px width) */}
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-[225px] bg-[#151633] text-white lg:flex lg:flex-col border-r border-white/5 shadow-lg">
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-shrink-0 flex-col justify-between bg-[#1B1C38] px-5 py-7 lg:flex border-r border-white/5">
+      <div>
         {/* Brand Header */}
-        <div className="border-b border-white/10 p-4.5">
-          <div className="flex items-center gap-2.5">
-            <div className="relative flex h-7.5 w-7.5 items-center justify-center rounded-full bg-white/10 flex-shrink-0">
-              <span className="h-5 w-5 rounded-full bg-gradient-to-tr from-[#5B4FE9] to-[#FF6B35] flex items-center justify-center">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#151633]" />
-              </span>
-            </div>
-            <div>
-              <div className="font-serif text-base font-normal tracking-tight text-white leading-none">
-                RecruiterOS
-              </div>
-              <div className="folio-mono text-[7.5px] uppercase tracking-widest text-stone-500 font-bold mt-1">
-                Local simulation
-              </div>
-            </div>
+        <div className="mb-10 flex items-center gap-3 px-2">
+        <div className="relative flex h-[36px] w-[36px] items-center justify-center">
+          {/* Outer Ring */}
+          <div className="absolute inset-0 rounded-full border-[3px] border-[#5B4FE9]" />
+
+          {/* Middle Circle */}
+          <div className="flex h-[17px] w-[17px] items-center justify-center rounded-full bg-[#2b2864]">
+            {/* Orange Dot */}
+            <div className="h-[10px] w-[10px] rounded-full bg-[#FF6B35]" />
           </div>
         </div>
+
+          <span
+            className="text-xl tracking-wide"
+            style={{ fontFamily: "DM Serif Display" }}
+          >
+            <span className="text-white">Fo</span>
+            <span className="text-[#8B82FF]">lio</span>
+          </span>
+        </div>
+        <div className="w-[224px] h-px bg-white/10"></div>
 
         {/* Navigation links */}
-        <nav className="flex-1 space-y-0.5 px-2 py-4">
-          {navItems.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/'}
-              className={({ isActive }) =>
-                `flex items-center gap-2.5 rounded-xl px-3 py-2 text-[12.5px] font-medium transition-all duration-150 ${
-                  isActive
-                    ? 'bg-[#242656] text-white font-semibold shadow-sm'
-                    : 'text-stone-400 hover:bg-white/5 hover:text-white'
-                }`
-              }
-            >
-              <Icon className="h-3.5 w-3.5 opacity-85 flex-shrink-0" strokeWidth={1.5} />
-              {label}
-            </NavLink>
-          ))}
-        </nav>
+        <nav className="mt-6 flex flex-col gap-1">
+        {navItems.map(({ to, label, icon: Icon }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={to === "/"}
+            className={({ isActive }) =>
+              `flex h-[46.4px] w-[216px] items-center gap-3 rounded-xl px-4 py-3 transition-all duration-150 ${
+                isActive
+                  ? "bg-[#5B4EFF40] text-white"
+                  : "text-[#FFFFFF8C] hover:bg-white/5 hover:text-white"
+              }`
+            }
+            style={{
+              fontFamily: '"DM Sans", system-ui, sans-serif',
+              fontSize: "14px",
+              fontWeight: 500,
+            }}
+          >
+            <Icon
+              className="h-5 w-5 flex-shrink-0"
+              strokeWidth={1.75}
+            />
+            <span>{label}</span>
+          </NavLink>
+        ))}
+      </nav>
+      </div>
 
         {/* User Card & Logout */}
-        <div className="border-t border-white/10 p-3.5 mt-auto">
-          <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-            <div className="font-sans font-semibold text-xs text-white truncate">
-              {user?.displayName}
-            </div>
-            <div className="mt-0.5 folio-mono text-[7.5px] uppercase tracking-wider text-brand-lavender font-bold">
-              {user?.role}
-            </div>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="mt-2.5 flex w-full items-center gap-2 rounded-xl px-3 py-1.5 text-[11px] font-semibold text-stone-400 hover:text-white transition-all duration-150 cursor-pointer"
-          >
-            <LogOut className="h-3.5 w-3.5" strokeWidth={1.5} />
-            Sign out
-          </button>
-        </div>
+      <div className="mt-auto">
+        <button
+          onClick={handleLogout}
+          className="flex h-[46px] w-[216px] items-center gap-3 rounded-xl px-4 py-3 text-[14px] font-medium text-[#A1A1AA] transition-all duration-150 hover:bg-white/5 hover:text-white"
+          style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
+        >
+          <LogOut className="h-5 w-5" strokeWidth={1.75} />
+          <span>Sign out</span>
+        </button>
+      </div>
       </aside>
 
       {/* Main Workspace Frame */}

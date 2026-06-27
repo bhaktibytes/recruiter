@@ -364,7 +364,7 @@ export default function OfferManagementPage() {
 
   return (
     <div 
-      className="min-h-screen bg-[#F2EFEA] text-[#1A1A2E] p-6 lg:p-8 overflow-x-hidden relative"
+      className="min-h-screen bg-[#F2EFEA] text-[#1A1A2E] p-0 overflow-x-hidden relative"
       style={styles.bodyFont}
     >
       {/* Toast Notification Stack */}
@@ -406,7 +406,7 @@ export default function OfferManagementPage() {
       <div className="max-w-[1200px] mx-auto mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
           <span 
-            className="text-[11px] font-mono tracking-[0.18em] text-[#5B4FE9] uppercase font-bold"
+            className="folio-mono text-[9px] uppercase tracking-[0.2em] text-brand-lavender mb-1.5 font-bold"
             style={styles.monoFont}
           >
             Recruiter Dashboard / Offer Desk

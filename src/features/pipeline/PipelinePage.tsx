@@ -38,11 +38,11 @@ export default function PipelinePage() {
   };
 
   return (
-    <div className="space-y-10 w-full mx-auto max-w-5xl relative">
+    <div className="space-y-6 w-full mx-auto">
       {/* Page Header */}
       <header className="border-b border-[#ECE8E2] pb-6 mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="folio-meta text-brand-purple uppercase mb-2">
+          <p className="folio-mono text-[9px] uppercase tracking-[0.2em] text-brand-lavender mb-1.5 font-bold">
             Candidate Pipeline
           </p>
           <h1 className="folio-page-title text-brand-navy mb-2">

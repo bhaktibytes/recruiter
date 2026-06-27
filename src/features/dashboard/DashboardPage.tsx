@@ -31,7 +31,7 @@ export default function DashboardPage() {
     .slice(0, 5);
 
   return (
-    <div className="space-y-6 w-full mx-auto">
+     <div className="space-y-6 w-full mx-auto animate-slide-up will-change-transform">
       {/* Page Header - Premium Editorial Command Center */}
       <header className="border-b border-[#ECE8E2] pb-5 mb-4">
         <p className="folio-mono text-[9px] uppercase tracking-[0.2em] text-brand-lavender mb-1.5 font-bold">

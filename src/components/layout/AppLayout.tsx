@@ -90,7 +90,7 @@ export default function AppLayout() {
               `flex h-[46.4px] w-[216px] items-center gap-3 rounded-xl px-4 py-3 transition-all duration-150 ${
                 isActive
                   ? "bg-[#5B4EFF40] text-white"
-                  : "text-[#FFFFFF8C] hover:bg-white/5 hover:text-white"
+                  : "text-[#A1A1AA] hover:bg-white/5 hover:text-white"
               }`
             }
             style={{
@@ -123,100 +123,57 @@ export default function AppLayout() {
       </aside>
 
       {/* Main Workspace Frame */}
-      <div className="lg:pl-[225px]">
+      <div className="lg:ml-64">
         {/* Sticky Top Header (Compact Figma size) */}
-        <header className="sticky top-0 z-10 border-b border-[#ECE8E2] bg-[#F2EFEA]/90 px-6 py-2.5 backdrop-blur sm:px-8 shadow-sm">
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4">
-            {/* Workspace Breadcrumbs */}
-            <div className="flex items-center gap-2">
-              <span className="folio-mono text-[9px] uppercase tracking-[0.2em] text-[#6D6B8D] font-bold">Workspace</span>
-              <span className="text-[#ECE8E2] text-xs">/</span>
-              <span className="folio-mono text-[9px] uppercase tracking-[0.2em] text-brand-navy font-extrabold">
-                {titles[location.pathname] ?? 'Overview'}
-              </span>
-            </div>
+<header className="sticky top-0 z-10 h-[72px] border-b border-[#ECE8E2] bg-[#FAF9F7]">
+  <div className="flex h-full items-center justify-between px-8">
 
-            {/* Quick Actions & Profile Panel */}
-            <div className="flex items-center gap-3">
-              <div className="hidden items-center gap-2 rounded-full border border-[#ECE8E2] bg-white px-3 py-1 text-xs text-brand-navy sm:flex font-medium">
-                <span className="h-1.5 w-1.5 rounded-full bg-brand-purple" />
-                <span className="folio-mono text-[8.5px] uppercase tracking-wider text-stone-500 font-bold">{user?.role}</span>
-              </div>
-              
-              {/* Notifications Icon Popover trigger */}
-              <div className="relative" ref={popoverRef}>
-                <button 
-                  onClick={() => setShowNotifPopover(!showNotifPopover)}
-                  className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[#ECE8E2] bg-white text-brand-navy hover:bg-stone-50 transition cursor-pointer"
-                >
-                  <Bell className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  {notifications.some(n => n.status !== 'Sent') && (
-                    <span className="absolute right-2.5 top-2.5 h-1 w-1 rounded-full bg-brand-orange animate-pulse" />
-                  )}
-                </button>
-                
-                {showNotifPopover && (
-                  <div className="absolute right-0 mt-2.5 w-80 bg-white border border-[#ECE8E2] rounded-2xl p-4 shadow-xl z-30 text-xs text-brand-navy">
-                    <div className="flex items-center justify-between border-b border-[#ECE8E2] pb-2 mb-2 font-mono text-[9px] uppercase tracking-wider text-stone-500 font-bold">
-                      <span>Notifications</span>
-                      <span className="text-brand-purple">{notifications.filter(n => n.status !== 'Sent').length} Pending</span>
-                    </div>
-                    
-                    <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-                      {notifications.length === 0 ? (
-                        <p className="text-stone-400 text-center py-4">No notifications found.</p>
-                      ) : (
-                        notifications.map((notif) => (
-                          <div key={notif.id} className="border-b border-stone-100 pb-2 last:border-0 last:pb-0">
-                            <div className="flex items-start justify-between gap-1.5 mb-1.5">
-                              <div>
-                                <h4 className="font-sans font-bold text-brand-navy text-[11px] leading-tight">{notif.title}</h4>
-                                <p className="text-[10px] text-stone-500 font-sans mt-0.5 leading-snug">{notif.detail}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-[7.5px] font-mono text-stone-400 uppercase font-bold bg-stone-50 border border-stone-200/40 px-1 py-0.5 rounded">
-                                {notif.channel}
-                              </span>
-                              {notif.status !== 'Sent' && (
-                                <button 
-                                  onClick={() => void updateItem(notif.id, { status: 'Sent' })}
-                                  className="text-[8px] font-mono font-bold uppercase tracking-wider text-white bg-brand-purple hover:bg-brand-orange px-2 py-0.5 rounded transition duration-150 cursor-pointer"
-                                >
-                                  Send Now
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                    
-                    <div className="border-t border-[#ECE8E2] pt-2 mt-2 text-center">
-                      <button 
-                        onClick={() => {
-                          setShowNotifPopover(false);
-                          navigate('/notifications');
-                        }}
-                        className="text-[9px] font-mono font-bold uppercase tracking-wider text-brand-purple hover:text-brand-orange transition"
-                      >
-                        View Notification Center →
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+    {/* Left */}
+    <h1
+      className="text-[20px] font-medium text-[#151633]"
+      style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
+    >
+      {titles[location.pathname] ?? "Dashboard"}
+    </h1>
 
-              {/* User Avatar Circle */}
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-navy text-white text-[11px] font-bold font-sans border border-brand-navy/10 shadow-sm">
-                {userInitial}
-              </div>
-            </div>
-          </div>
-        </header>
+    {/* Right */}
+    <div className="flex items-center gap-4">
+
+      {/* Recruiter Pill */}
+      <div className="flex h-12 items-center rounded-full border border-[#ECE8E2] bg-white px-5">
+        <span className="mr-2 h-2 w-2 rounded-full bg-[#5B4FE9]" />
+        <span className="folio-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#6D6B8D]">
+          {user?.role}
+        </span>
+      </div>
+
+      {/* Notification */}
+      <div className="relative" ref={popoverRef}>
+        <button
+          onClick={() => setShowNotifPopover(!showNotifPopover)}
+          className="relative flex h-12 w-12 items-center justify-center rounded-full border border-[#ECE8E2] bg-white"
+        >
+          <Bell className="h-5 w-5" strokeWidth={1.75} />
+
+          {notifications.some(n => n.status !== "Sent") && (
+            <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-[#FF6B35]" />
+          )}
+        </button>
+
+        {/* Keep your notification popup here exactly as it is */}
+      </div>
+
+      {/* Avatar */}
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#151633] text-white font-semibold">
+        {userInitial}
+      </div>
+
+    </div>
+  </div>
+</header>
 
         {/* Content Area */}
-        <main className="mx-auto max-w-5xl p-5 sm:p-6">
+        <main className="px-8 py-6">
           {/* Mobile responsive navigation toolbar */}
           <div className="mb-4 flex gap-1.5 overflow-x-auto pb-1.5 lg:hidden scrollbar-none">
             {navItems.map(({ to, label }) => (
@@ -236,8 +193,14 @@ export default function AppLayout() {
               </NavLink>
             ))}
           </div>
+          <div
+            key={location.pathname}
+            className="animate-slide-up"
+          ></div>
           
-          <Outlet />
+          <div key={location.pathname} className="animate-slide-up">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

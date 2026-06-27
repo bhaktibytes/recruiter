@@ -40,6 +40,7 @@ export default function JobsPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [showRequirements, setShowRequirements] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const filteredJobs = jobs.filter((job) => 
     `${job.title} ${job.department} ${job.location}`.toLowerCase().includes(query.toLowerCase())
@@ -156,7 +157,10 @@ const handleSliderChange = (
       applicantsCount: 0,
       createdAt: new Date().toISOString().slice(0, 10),
     });
-
+    setShowSuccessModal(true);
+    setTimeout(() => {
+      setShowSuccessModal(false);
+    }, 2500);
     setForm(initialForm);
     setSkillsInput('');
     setWeights({
@@ -181,6 +185,41 @@ const handleSliderChange = (
     <div className="space-y-6 w-full mx-auto">
       {/* Grid Separation */}
       <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+        {showSuccessModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+            <div className="w-[380px] rounded-2xl bg-white p-8 shadow-2xl animate-slide-up">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                <svg
+                  className="h-8 w-8 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+
+              <h2
+                className="text-center text-[24px] font-bold text-[#1A1C2E]"
+                style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
+              >
+                Role Posted
+              </h2>
+
+              <p
+                className="mt-3 text-center text-[15px] text-[#6B7280]"
+                style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
+              >
+                Your requisition has been successfully posted.
+              </p>
+            </div>
+          </div>
+        )}
         {/* Left: Form Container Card (Stripe styled visual panel) */}
         <form onSubmit={createJob} className="rounded-2xl border border-stone-200/60 bg-[#FFFFFF] p-6 h-fit shadow-sm">
           <div className="mb-5 border-b border-[#ECE8E2] pb-4">

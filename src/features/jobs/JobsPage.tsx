@@ -146,7 +146,7 @@ const handleSliderChange = (
     setIsSaving(true);
 
     // Mock network latency to prevent duplicate submissions
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     const finalSkills = skillsInput.split(',').map(s => s.trim()).filter(Boolean);
 
@@ -155,12 +155,13 @@ const handleSliderChange = (
       requiredSkills: finalSkills,
       requirementsWeights: weights,
       applicantsCount: 0,
-      createdAt: new Date().toISOString().slice(0, 10),
+      createdAt: new Date().toISOString().slice(0, 100),
     });
     setShowSuccessModal(true);
     setTimeout(() => {
-      setShowSuccessModal(false);
-    }, 2500);
+      // 1 second
+    setShowSuccessModal(false);
+    }, 1500);
     setForm(initialForm);
     setSkillsInput('');
     setWeights({

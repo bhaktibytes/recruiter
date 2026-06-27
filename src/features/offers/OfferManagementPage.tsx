@@ -405,19 +405,13 @@ export default function OfferManagementPage() {
       {/* Main Header Container */}
       <div className="max-w-[1200px] mx-auto mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
         <div>
-          <span 
-            className="folio-mono text-[9px] uppercase tracking-[0.2em] text-brand-lavender mb-1.5 font-bold"
-            style={styles.monoFont}
-          >
-            Recruiter Dashboard / Offer Desk
-          </span>
           <h1 
-            className="text-4xl md:text-5xl text-[#1A1A2E] mt-2 mb-3 font-normal tracking-tight"
-            style={styles.displayFont}
+            className="mb-2 text-[22px] font-bold text-[#1A1C2E]"
+            style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
           >
             Offer management
           </h1>
-          <p className="text-slate-500 text-sm md:text-base max-w-xl">
+          <p className="max-w-3xl text-[15px] leading-relaxed text-[#1A1C2E99]">
             Draft, negotiate, and finalize compensation structures. Use portfolio intelligence matches to optimize candidate acceptance.
           </p>
         </div>

@@ -34,18 +34,15 @@ export default function DashboardPage() {
      <div className="space-y-6 w-full mx-auto animate-slide-up will-change-transform">
       {/* Page Header - Premium Editorial Command Center */}
       <header className="border-b border-[#ECE8E2] pb-5 mb-4">
-        <p className="folio-mono text-[9px] uppercase tracking-[0.2em] text-brand-lavender mb-1.5 font-bold">
-          Recruitment Dashboard
-        </p>
-        <h1 className="folio-page-title font-light text-brand-navy leading-none tracking-tight">
+        <h1 className="font-serif text-[32px] tracking-tight text-navy mb-1.5">
           Recruitment Operations
         </h1>
-        <p className="mt-2 text-xs text-[#6D6B8D]/80 font-sans max-w-xl">
-          Coordinate global requisitions, candidate evaluation pipelines, and interview calendars from a single design-first workspace.
+        <p className="max-w-3xl text-[15px] leading-relaxed text-[#1A1C2E99]">
+          Connect a portfolio source to get your first intelligence report. The analysis extracts your skills, tools, and design domains from actual work.
         </p>
         
         {/* Executive Summary Row (Figma Style Space Mono chips) */}
-        <div className="flex flex-wrap items-center gap-2 mt-4.5 folio-mono text-[9px] uppercase tracking-wide text-brand-navy">
+        <div className="flex flex-wrap items-center gap-2 mt-6 folio-mono text-[9px] uppercase tracking-wide text-brand-navy">
           <span className="bg-white border border-[#ECE8E2] rounded-lg px-2.5 py-1.5 shadow-sm font-bold">14.5 Days <span className="text-[#6D6B8D]/70 font-normal">Hiring Velocity</span></span>
           <span className="bg-white border border-[#ECE8E2] rounded-lg px-2.5 py-1.5 shadow-sm font-bold">{avgMatch}% <span className="text-[#6D6B8D]/70 font-normal">Average Match</span></span>
           <span className="bg-white border border-[#ECE8E2] rounded-lg px-2.5 py-1.5 shadow-sm font-bold">{interviewsTodayCount} <span className="text-[#6D6B8D]/70 font-normal">Interviews Today</span></span>
@@ -53,7 +50,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recruiter Quick Actions Bar */}
-        <div className="flex flex-wrap gap-2.5 mt-5">
+        <div className="flex flex-wrap gap-2.5 mt-7">
           <button 
             onClick={() => navigate('/jobs')} 
             className="button-primary py-2 px-4 flex items-center gap-1.5 text-[10px] font-mono tracking-wider uppercase cursor-pointer"
@@ -123,8 +120,13 @@ export default function DashboardPage() {
         <div className="rounded-2xl border border-stone-200/60 bg-white p-6 flex flex-col justify-between shadow-sm">
           <div className="mb-4 flex items-start justify-between border-b border-[#ECE8E2] pb-4">
             <div>
-              <h2 className="folio-section-title text-brand-navy">Hiring Funnel</h2>
-              <p className="mt-0.5 folio-meta text-[#6D6B8D] uppercase">Standard candidate conversion funnel.</p>
+              <h2
+                className="text-[20px] font-bold text-brand-navy"
+                style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
+              >
+                Hiring Funnel
+              </h2>
+              <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Standard candidate conversion funnel.</p>
             </div>
             <Activity className="h-4.5 w-4.5 text-[#6D6B8D]" strokeWidth={1.5} />
           </div>
@@ -157,8 +159,9 @@ export default function DashboardPage() {
         <div className="rounded-2xl border border-stone-200/60 bg-white p-6 shadow-sm flex flex-col justify-between">
           <div>
             <div className="mb-4 border-b border-[#ECE8E2] pb-4">
-              <h2 className="folio-section-title text-brand-navy">Priority Requisitions</h2>
-              <p className="mt-0.5 folio-meta text-[#6D6B8D] uppercase">Open roles requiring immediate sourcing.</p>
+              <h2 className="text-[20px] font-bold text-brand-navy" 
+              style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>Priority Requisitions</h2>
+              <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Open roles requiring immediate sourcing.</p>
             </div>
             <div className="space-y-3.5">
               {jobs.slice(0, 3).map((job) => (
@@ -202,8 +205,9 @@ export default function DashboardPage() {
         {/* Left: Recent Candidate Movement Table */}
         <div className="rounded-2xl border border-stone-200/60 bg-white p-6 shadow-sm overflow-hidden">
           <div className="mb-4 border-b border-[#ECE8E2] pb-4">
-            <h2 className="folio-section-title text-brand-navy">Recent Candidate Movement</h2>
-            <p className="mt-0.5 folio-meta text-[#6D6B8D] uppercase">Latest transitions in candidate evaluation status.</p>
+            <h2 className="text-[20px] font-bold text-brand-navy"
+                style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>Recent Candidate Movement</h2>
+            <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Latest transitions in candidate evaluation status.</p>
           </div>
           <div className="overflow-x-auto -mx-6">
             <div className="inline-block min-w-full align-middle px-6">
@@ -243,8 +247,9 @@ export default function DashboardPage() {
           <div>
             <div className="mb-4 border-b border-[#ECE8E2] pb-4 flex items-center justify-between">
               <div>
-                <h2 className="folio-section-title text-brand-navy">Top Matches</h2>
-                <p className="mt-0.5 folio-meta text-[#6D6B8D] uppercase">Best fitting profiles in pool.</p>
+                <h2 className="text-[20px] font-bold text-brand-navy"
+                style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>Top Matches</h2>
+                <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Best fitting profiles in pool.</p>
               </div>
             </div>
             <div className="space-y-3.5">

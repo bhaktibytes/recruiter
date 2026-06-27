@@ -179,26 +179,14 @@ const handleSliderChange = (
 
   return (
     <div className="space-y-6 w-full mx-auto">
-      {/* Page Header */}
-      <header className="border-b border-[#ECE8E2] pb-5 mb-4">
-        <p className="folio-mono text-[9px] uppercase tracking-[0.2em] text-brand-lavender mb-1.5 font-bold">
-          Role Blueprint Repository
-        </p>
-        <h1 className="folio-page-title font-light text-brand-navy leading-none tracking-tight">
-          Job Requisitions
-        </h1>
-        <p className="mt-2 text-xs text-[#6D6B8D]/80 font-sans max-w-xl">
-          Create and monitor open roles, assign hiring managers, and review target timelines for active requisitions.
-        </p>
-      </header>
-
       {/* Grid Separation */}
       <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
         {/* Left: Form Container Card (Stripe styled visual panel) */}
-        <form onSubmit={createJob} className="rounded-2xl border border-stone-200/60 bg-stone-50/50 p-6 h-fit shadow-sm">
+        <form onSubmit={createJob} className="rounded-2xl border border-stone-200/60 bg-[#FFFFFF] p-6 h-fit shadow-sm">
           <div className="mb-5 border-b border-[#ECE8E2] pb-4">
-            <span className="folio-meta text-[#6D6B8D] uppercase block mb-1">Requisition Details</span>
-            <h2 className="folio-section-title text-brand-navy">Create Requisition</h2>
+            <h2 className="text-[25px] font-bold text-brand-navy"
+                style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>Create Requisition</h2>
+            <span className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Requisition Details</span>
           </div>
           
           <div className="space-y-4">
@@ -473,7 +461,8 @@ const handleSliderChange = (
         <section className="rounded-2xl border border-stone-200/60 bg-white overflow-hidden h-fit shadow-sm">
           <div className="flex flex-col gap-4 border-b border-[#ECE8E2] p-6 sm:flex-row sm:items-center sm:justify-between bg-stone-50/30">
             <div>
-              <h2 className="folio-section-title text-brand-navy">Open Roles</h2>
+              <h2 className="text-[25px] font-bold text-brand-navy"
+                style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>Open Roles</h2>
               <p className="mt-0.5 folio-meta text-[#6D6B8D] uppercase">{filteredJobs.length} requisitions visible</p>
             </div>
             {/* Prominent Search bar */}

@@ -22,19 +22,6 @@ export default function CampusPage() {
 
   return (
     <div className="space-y-6 w-full mx-auto">
-      {/* Page Header */}
-      <header className="border-b border-[#ECE8E2] pb-6 mb-6">
-        <p className="folio-mono text-[9px] uppercase tracking-[0.2em] text-brand-lavender mb-1.5 font-bold">
-          Talent Pipeline Outreach
-        </p>
-        <h1 className="folio-page-title text-brand-navy mb-4">
-          Campus Recruitment
-        </h1>
-        <p className="mt-2 text-[#6D6B8D] font-sans text-base max-w-2xl leading-relaxed">
-          Manage university outreach drives, track candidate registration metrics, and evaluate shortlist ratios to source early-career talent.
-        </p>
-      </header>
-
       {/* Metrics Row - Rich Aesthetics, Premium KPI Cards */}
       <section className="grid gap-6 sm:grid-cols-3">
         {/* Active Campaigns */}

@@ -63,13 +63,13 @@ export default function InterviewsPage() {
     <div className="space-y-6 w-full mx-auto">
       {/* Page Header */}
       <header className="border-b border-[#ECE8E2] pb-5 mb-4">
-        <p className="folio-mono text-[9px] uppercase tracking-[0.2em] text-brand-lavender mb-1.5 font-bold">
+        <h1
+          className="mb-2 text-[22px] font-semibold text-[#1A1C2E]"
+          style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
+        >
           Interview Management
-        </p>
-        <h1 className="folio-page-title font-light text-brand-navy leading-none tracking-tight">
-          Interview Calendar
         </h1>
-        <p className="mt-2 text-xs text-[#6D6B8D]/80 font-sans max-w-xl">
+        <p className="max-w-3xl text-[15px] leading-relaxed text-[#1A1C2E99]">
           Coordinate technical panels, review feedback markers, and schedule assessments for pipeline candidates.
         </p>
       </header>

@@ -22,19 +22,6 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6 w-full mx-auto">
-      {/* Page Header */}
-      <header className="border-b border-[#ECE8E2] pb-6 mb-6">
-        <p className="folio-mono text-[9px] uppercase tracking-[0.2em] text-brand-lavender mb-1.5 font-bold">
-          Admin Console
-        </p>
-        <h1 className="folio-page-title text-brand-navy mb-4">
-          System Settings
-        </h1>
-        <p className="mt-2 text-[#6D6B8D] font-sans text-base max-w-2xl leading-relaxed">
-          Monitor service layer connectivity, initialize mock records, and review pre-registered simulation accounts.
-        </p>
-      </header>
-
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         {/* Left Column: Data Management */}

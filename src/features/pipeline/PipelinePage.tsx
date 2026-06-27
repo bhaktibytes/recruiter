@@ -42,13 +42,11 @@ export default function PipelinePage() {
       {/* Page Header */}
       <header className="border-b border-[#ECE8E2] pb-6 mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="folio-mono text-[9px] uppercase tracking-[0.2em] text-brand-lavender mb-1.5 font-bold">
-            Candidate Pipeline
-          </p>
-          <h1 className="folio-page-title text-brand-navy mb-2">
+          <h1 className="mb-2 text-[22px] font-bold text-[#1A1C2E]"
+          style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>
             Pipeline Flow
           </h1>
-          <p className="text-xs text-[#6D6B8D] font-sans max-w-xl">
+          <p className="max-w-3xl text-[15px] leading-relaxed text-[#1A1C2E99]">
             Coordinate automated profile intakes, examine match ratios, and advance candidates through evaluation nodes.
           </p>
         </div>

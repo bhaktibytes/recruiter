@@ -94,8 +94,9 @@ export default function CampusPage() {
         <div className="rounded-2xl border border-[#ECE8E2] bg-[#FCFBF9] p-6 shadow-sm">
           <div className="mb-6 border-b border-[#ECE8E2] pb-4 flex justify-between items-center">
             <div>
-              <h2 className="folio-section-title text-brand-navy">Recruitment Campaigns</h2>
-              <p className="mt-1 folio-meta text-[#6D6B8D] uppercase">Active and historic campus drives.</p>
+              <h2 className="mb-2 text-[22px] font-bold text-[#1A1C2E]"
+          style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>Recruitment Campaigns</h2>
+              <p className="text-[11px] mt-0.5 folio-meta text-[#6D6B8D] uppercase block tracking-wider font-bold">Active and historic campus drives.</p>
             </div>
           </div>
           
@@ -170,8 +171,9 @@ export default function CampusPage() {
         {/* Right Column: Upcoming Activity Timeline */}
         <div className="rounded-2xl border border-[#ECE8E2] bg-[#FCFBF9] p-6 h-fit shadow-sm">
           <div className="mb-6 border-b border-[#ECE8E2] pb-4">
-            <h2 className="folio-section-title text-brand-navy">Upcoming Activity</h2>
-            <p className="mt-1 folio-meta text-[#6D6B8D] uppercase">Drives currently in planning stage.</p>
+            <h2 className="mb-2 text-[22px] font-bold text-[#1A1C2E]"
+          style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>Upcoming Activity</h2>
+            <p className="text-[11px] mt-0.5 folio-meta text-[#6D6B8D] uppercase block tracking-wider font-bold">Drives currently in planning stage.</p>
           </div>
           <div className="space-y-4">
             {upcomingDrives.length === 0 ? (

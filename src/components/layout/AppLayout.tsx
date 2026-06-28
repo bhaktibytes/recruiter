@@ -24,6 +24,7 @@ const titles: Record<string, string> = {
   '/campus': 'Campus Recruitment',
   '/offers': 'Offer Desk',
   '/admin': 'System Settings',
+  '/notifications': 'Notifications Center', // Added to support your header workspace text
 };
 
 export default function AppLayout() {
@@ -31,11 +32,9 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { items: notifications } = useCollection<NotificationItem>('notifications');
-  const [showNotifPopover, setShowNotifPopover] = useState(false);
   const [showProfilePopover, setShowProfilePopover] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   
-  const popoverRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
   const handleLogout = () => {
@@ -47,9 +46,6 @@ export default function AppLayout() {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
-        setShowNotifPopover(false);
-      }
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setShowProfilePopover(false);
       }
@@ -163,21 +159,23 @@ export default function AppLayout() {
                 </span>
               </div>
 
-              {/* Notification */}
-              <div className="relative" ref={popoverRef}>
-                <button
-                  onClick={() => setShowNotifPopover(!showNotifPopover)}
-                  className="relative flex h-12 w-12 items-center justify-center rounded-full border border-[#ECE8E2] bg-white"
-                >
-                  <Bell className="h-5 w-5" strokeWidth={1.75} />
+              {/* Notification Bell Link */}
+              <NavLink
+                to="/notifications"
+                className={({ isActive }) =>
+                  `relative flex h-12 w-12 items-center justify-center rounded-full border transition duration-150 ${
+                    isActive
+                      ? "bg-brand-purple/10 border-brand-purple/30 text-brand-purple"
+                      : "border-[#ECE8E2] bg-white text-brand-navy hover:border-brand-purple/20"
+                  }`
+                }
+              >
+                <Bell className="h-5 w-5" strokeWidth={1.75} />
 
-                  {notifications.some(n => n.status !== "Sent") && (
-                    <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-[#FF6B35]" />
-                  )}
-                </button>
-
-                {/* Keep your notification popup here exactly as it is */}
-              </div>
+                {notifications.some(n => n.status !== "Sent") && (
+                  <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-[#FF6B35]" />
+                )}
+              </NavLink>
 
               {/* Avatar / Profile Popover Dropdown */}
               <div className="relative" ref={profileRef}>

@@ -8,21 +8,38 @@ type JobForm = Omit<Job, 'id' | 'applicantsCount' | 'createdAt'>;
 
 const initialForm: JobForm = {
   title: '',
+  category: 'Engineering',
   department: 'Engineering',
   location: 'Bengaluru',
+  workMode: 'Hybrid',
   type: 'Full-time',
   status: 'Draft',
   hiringManager: '',
   priority: 'Medium',
+
+  experienceRequired: '1-3 years',
+  salaryRange: '',
+  keyResponsibilities: '',
+  requiredSkills: [],
+  educationalQualifications: '',
+  numberOfOpenings: 1,
+  applicationDeadline: '',
+
   targetDate: '2026-07-31',
   description: '',
+
   experienceLevel: 'Mid-level',
-  salaryRange: '',
-  requiredSkills: [],
   keywords: [],
   certifications: '',
-  requirementsWeights: { Creativity: 20, Leadership: 20, Teamwork: 20, Communication: 20, 'Problem Solving': 20 }
+  requirementsWeights: {
+    Creativity: 20,
+    Leadership: 20,
+    Teamwork: 20,
+    Communication: 20,
+    'Problem Solving': 20,
+  },
 };
+
 
 const skillsList = ['Creativity', 'Leadership', 'Teamwork', 'Communication', 'Problem Solving'];
 
@@ -270,17 +287,56 @@ function JobsPage() {
     );
   }, [form.title, form.department, form.location, jobs]);
 
+  const getCurrentErrors = (f: JobForm, req: { skillsText: string; keywordsText: string; w: Record<string, number> }) => {
+    const now = new Date().toISOString().slice(0, 10);
+
+    const next: Record<string, string> = {};
+
+    // Mandatory fields (as per request)
+    if (!f.title.trim()) next.title = 'Job Title is required.';
+
+    if (!f.category) next.category = 'Job Category is required.';
+
+    if (!f.type) next.type = 'Employment Type is required.';
+
+    if (!f.workMode) next.workMode = 'Work Mode is required.';
+
+    if (!f.location.trim()) next.location = 'Location is required.';
+
+    if (!f.experienceRequired?.trim()) next.experienceRequired = 'Experience Required is required.';
+
+    if (!f.salaryRange?.trim()) next.salaryRange = 'Salary Range is required.';
+
+    if (!f.keyResponsibilities?.trim()) next.keyResponsibilities = 'Key Responsibilities are required.';
+
+    const finalSkills = normalizeSkills(req.skillsText);
+    if (finalSkills.length === 0) next.requiredSkills = 'Required Skills are required (add at least 1 skill).';
+
+    if (!f.educationalQualifications?.trim()) next.educationalQualifications = 'Educational Qualifications are required.';
+
+    if (!Number.isFinite(f.numberOfOpenings) || f.numberOfOpenings <= 0) {
+      next.numberOfOpenings = 'Number of Openings must be greater than 0.';
+    }
+
+    if (!f.applicationDeadline?.trim()) next.applicationDeadline = 'Application Deadline is required.';
+    else if (f.applicationDeadline < now) next.applicationDeadline = 'Application Deadline cannot be in the past.';
+
+    // Existing validation kept
+    if (!f.hiringManager.trim()) next.hiringManager = 'Hiring Manager is required.';
+
+    // Target Date sanity check (kept from original)
+    if (f.targetDate < now) next.targetDate = 'Target Date cannot be in the past.';
+
+    return next;
+  };
+
+
+
+
   const createJob = async (event: React.FormEvent) => {
     event.preventDefault();
-    
-    const today = new Date().toISOString().slice(0, 10);
-    const newErrors: Record<string, string> = {};
 
-    if (!form.title.trim()) newErrors.title = "Job Title is required.";
-    if (!form.hiringManager.trim()) newErrors.hiringManager = "Hiring Manager is required.";
-    if (form.targetDate < today) {
-      newErrors.targetDate = "Target Date cannot be in the past.";
-    }
+    const newErrors = getCurrentErrors(form, { skillsText: skillsInput, keywordsText: keywordsInput, w: weights });
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -291,7 +347,7 @@ function JobsPage() {
     setIsSaving(true);
 
     // Mock network latency to prevent duplicate submissions
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     const finalSkills = normalizeSkills(skillsInput);
     const finalKeywords = normalizeKeywords(keywordsInput);
@@ -313,10 +369,11 @@ function JobsPage() {
       Leadership: 20,
       Teamwork: 20,
       Communication: 20,
-      'Problem Solving': 20
+      'Problem Solving': 20,
     });
     setIsSaving(false);
   };
+
 
   const mismatch = detectMismatch(form.title, form.department, form.description);
   

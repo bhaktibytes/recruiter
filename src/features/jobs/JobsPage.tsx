@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Search, AlertTriangle, Sparkles } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useCollection } from '@/hooks/useCollection';
@@ -19,17 +19,167 @@ const initialForm: JobForm = {
   experienceLevel: 'Mid-level',
   salaryRange: '',
   requiredSkills: [],
+  keywords: [],
   certifications: '',
   requirementsWeights: { Creativity: 20, Leadership: 20, Teamwork: 20, Communication: 20, 'Problem Solving': 20 }
 };
 
 const skillsList = ['Creativity', 'Leadership', 'Teamwork', 'Communication', 'Problem Solving'];
 
-export default function JobsPage() {
+const titleSuggestionsMap: Record<string, string[]> = {
+  developer: ['Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'React Developer'],
+  dev: ['Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'React Developer'],
+  engineer: ['Software Engineer', 'React Engineer', 'Cloud Engineer', 'DevOps Engineer'],
+  eng: ['Software Engineer', 'React Engineer', 'Cloud Engineer', 'DevOps Engineer'],
+  designer: ['UI/UX Designer', 'Product Designer', 'Visual Designer', 'Graphic Designer'],
+  des: ['UI/UX Designer', 'Product Designer', 'Visual Designer', 'Graphic Designer'],
+  analyst: ['Data Analyst', 'Business Analyst', 'Systems Analyst', 'Financial Analyst'],
+  ana: ['Data Analyst', 'Business Analyst', 'Systems Analyst', 'Financial Analyst'],
+  manager: ['Product Manager', 'Project Manager', 'Engineering Manager', 'Hiring Manager'],
+  man: ['Product Manager', 'Project Manager', 'Engineering Manager', 'Hiring Manager']
+};
+
+const cleanCommaString = (input: string, toLowercase = false): string[] => {
+  return input
+    .split(',')
+    .map((s) => s.trim())
+    .map((s) => (toLowercase ? s.toLowerCase() : s))
+    .filter((val, idx, arr) => val !== '' && arr.indexOf(val) === idx);
+};
+
+const normalizeKeywords = (input: string): string[] => {
+  return cleanCommaString(input, true);
+};
+
+const normalizeSkills = (input: string): string[] => {
+  return cleanCommaString(input, false);
+};
+
+const getTopWeights = (weightsRecord?: Record<string, number>) => {
+  const defaultWeights = { Creativity: 20, Leadership: 20, Teamwork: 20, Communication: 20, 'Problem Solving': 20 };
+  const w = weightsRecord || defaultWeights;
+  return Object.entries(w)
+    .filter(([_, val]) => val > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+};
+
+const getAIInsights = (job: Job) => {
+  const insights: string[] = [];
+  const desc = (job.description || '').toLowerCase();
+  const skills = (job.requiredSkills || []).map((s) => s.toLowerCase());
+  const weights = job.requirementsWeights || {};
+
+  if (desc.includes('react') || skills.includes('react')) {
+    insights.push('Strong React requirement');
+  }
+  if (!job.salaryRange) {
+    insights.push('Missing salary details');
+  }
+  if (weights.Leadership && weights.Leadership > 25) {
+    insights.push('Leadership weighted heavily');
+  }
+  const keywordsCount = (job.keywords || []).length;
+  if (desc.length > 300 && keywordsCount >= 3) {
+    insights.push('Good search visibility');
+  } else {
+    insights.push('Low search visibility - add keywords/details');
+  }
+  if (job.experienceLevel === 'Senior' || job.experienceLevel === 'Lead') {
+    insights.push('Senior leadership position');
+  }
+  if (job.priority === 'Critical') {
+    insights.push('Urgent requisition fulfillment');
+  }
+  return insights;
+};
+
+const analyzeJD = (
+  desc: string,
+  skillsText: string,
+  salaryRange: string,
+  experienceLevel: string,
+  certifications: string,
+  title: string,
+  keywordsText: string
+) => {
+  const suggestions: string[] = [];
+  let score = 100;
+
+  const trimmedDesc = desc.trim();
+  if (trimmedDesc.length === 0) {
+    score -= 30;
+    suggestions.push('Job description is empty. Please add candidate responsibilities.');
+  } else if (trimmedDesc.length < 150) {
+    score -= 20;
+    suggestions.push('Job description is too short (min 150 chars).');
+  } else if (trimmedDesc.length < 300) {
+    score -= 10;
+    suggestions.push('Extend the job description to explain candidate responsibilities (min 300 chars).');
+  }
+
+  const skillsCount = skillsText.split(',').map((s) => s.trim()).filter(Boolean).length;
+  if (skillsCount === 0) {
+    score -= 15;
+    suggestions.push('Add required skills to target qualified applicants.');
+  } else if (skillsCount < 3) {
+    score -= 10;
+    suggestions.push('Specify at least 3 required skills/tools for better matching.');
+  }
+
+  const keywordsCount = keywordsText.split(',').map((k) => k.trim()).filter(Boolean).length;
+  if (keywordsCount === 0) {
+    score -= 10;
+    suggestions.push('Incorporate industry-standard keywords to increase searchability.');
+  }
+
+  if (!salaryRange.trim()) {
+    score -= 10;
+    suggestions.push('Specify a salary range to increase applicant response rate.');
+  }
+  if (!experienceLevel) {
+    score -= 10;
+    suggestions.push('Specify a target experience level.');
+  }
+  if (!certifications.trim()) {
+    score -= 5;
+    suggestions.push('Mention target certifications if applicable.');
+  }
+
+  const genericTitles = ['developer', 'engineer', 'designer', 'analyst', 'manager', 'lead', 'intern', 'consultant'];
+  if (genericTitles.includes(title.trim().toLowerCase())) {
+    score -= 15;
+    suggestions.push("Avoid generic titles. Be specific (e.g., 'React Developer' instead of 'Developer').");
+  }
+
+  const words = trimmedDesc.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
+  const wordCounts: Record<string, number> = {};
+  words.forEach((w) => {
+    wordCounts[w] = (wordCounts[w] || 0) + 1;
+  });
+  const repeated = Object.entries(wordCounts).filter(([_, count]) => count > 5);
+  if (repeated.length > 0) {
+    score -= 10;
+    const wordList = repeated.slice(0, 3).map(([w]) => `"${w}"`).join(', ');
+    suggestions.push(`Reduce word repetition for words like ${wordList} to improve description quality.`);
+  }
+
+  score = Math.max(0, Math.min(100, score));
+
+  let rating: 'Excellent' | 'Good' | 'Average' | 'Poor' = 'Poor';
+  if (score >= 85) rating = 'Excellent';
+  else if (score >= 70) rating = 'Good';
+  else if (score >= 50) rating = 'Average';
+
+  return { score, rating, suggestions };
+};
+
+function JobsPage() {
   const { items: jobs, addItem, updateItem } = useCollection<Job>('jobs');
   const [query, setQuery] = useState('');
   const [form, setForm] = useState<JobForm>(initialForm);
   const [skillsInput, setSkillsInput] = useState('');
+  const [keywordsInput, setKeywordsInput] = useState('');
   const [weights, setWeights] = useState<Record<string, number>>({
     Creativity: 20,
     Leadership: 20,
@@ -41,59 +191,35 @@ export default function JobsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [showRequirements, setShowRequirements] = useState(false);
 
-  const filteredJobs = jobs.filter((job) => 
-    `${job.title} ${job.department} ${job.location}`.toLowerCase().includes(query.toLowerCase())
-  );
+  const filteredJobs = useMemo(() => {
+    const lowerQuery = query.toLowerCase().trim();
+    if (!lowerQuery) return jobs;
+    return jobs.filter((job) => {
+      const fields = [
+        job.title,
+        job.department,
+        job.location,
+        job.experienceLevel || '',
+        job.status,
+        job.hiringManager,
+        job.salaryRange || '',
+        job.certifications || '',
+        ...(job.keywords || []),
+        ...(job.requiredSkills || [])
+      ].map((f) => f.toLowerCase());
+      
+      return fields.some((f) => f.includes(lowerQuery));
+    });
+  }, [jobs, query]);
 
-const handleSliderChange = (
-  changedSkill: string,
-  newValue: number
-) => {
-  setWeights((current) => ({
-    ...current,
-    [changedSkill]: newValue,
-  }));
-};
-
-  const analyzeJD = (desc: string, skillsText: string) => {
-    const suggestions: string[] = [];
-    let score = 0;
-    
-    if (desc.length > 150) {
-      score += 2;
-    } else if (desc.length > 50) {
-      score += 1;
-      suggestions.push("Extend the job description to explain candidate responsibilities (min 150 chars).");
-    } else {
-      suggestions.push("Job description is too short (min 150 chars).");
-    }
-
-    const skillsCount = skillsText.split(',').map(s => s.trim()).filter(Boolean).length;
-    if (skillsCount >= 3) {
-      score += 2;
-    } else if (skillsCount >= 1) {
-      score += 1;
-      suggestions.push("Specify at least 3 required skills/tools for better matching.");
-    } else {
-      suggestions.push("Add required skills to target qualified applicants.");
-    }
-
-    const keywords = ["react", "typescript", "design", "analytics", "sql", "sales", "experience", "development", "architecture", "figma"];
-    const matches = keywords.filter(kw => desc.toLowerCase().includes(kw));
-    if (matches.length >= 3) {
-      score += 2;
-    } else if (matches.length >= 1) {
-      score += 1;
-      suggestions.push("Enrich description with technical frameworks, tools, or department keywords.");
-    } else {
-      suggestions.push("Incorporate industry-standard keywords to increase searchability.");
-    }
-
-    let rating: 'Good' | 'Average' | 'Bad' = 'Bad';
-    if (score >= 5) rating = 'Good';
-    else if (score >= 3) rating = 'Average';
-
-    return { rating, suggestions };
+  const handleSliderChange = (
+    changedSkill: string,
+    newValue: number
+  ) => {
+    setWeights((current) => ({
+      ...current,
+      [changedSkill]: newValue,
+    }));
   };
 
   const detectMismatch = (title: string, dept: string, desc: string) => {
@@ -124,6 +250,26 @@ const handleSliderChange = (
     return null;
   };
 
+  const titleSuggestions = useMemo(() => {
+    const lowercaseVal = form.title.trim().toLowerCase();
+    if (!lowercaseVal) return [];
+    for (const [key, suggestions] of Object.entries(titleSuggestionsMap)) {
+      if (key.includes(lowercaseVal) || lowercaseVal.includes(key)) {
+        return suggestions.filter((s) => s.toLowerCase() !== lowercaseVal);
+      }
+    }
+    return [];
+  }, [form.title]);
+
+  const hasDuplicateWarning = useMemo(() => {
+    if (!form.title.trim() || !form.department.trim() || !form.location.trim()) return false;
+    return jobs.some((j) => 
+      j.title.trim().toLowerCase() === form.title.trim().toLowerCase() &&
+      j.department.trim().toLowerCase() === form.department.trim().toLowerCase() &&
+      j.location.trim().toLowerCase() === form.location.trim().toLowerCase()
+    );
+  }, [form.title, form.department, form.location, jobs]);
+
   const createJob = async (event: React.FormEvent) => {
     event.preventDefault();
     
@@ -147,11 +293,13 @@ const handleSliderChange = (
     // Mock network latency to prevent duplicate submissions
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const finalSkills = skillsInput.split(',').map(s => s.trim()).filter(Boolean);
+    const finalSkills = normalizeSkills(skillsInput);
+    const finalKeywords = normalizeKeywords(keywordsInput);
 
     await addItem({
       ...form,
       requiredSkills: finalSkills,
+      keywords: finalKeywords,
       requirementsWeights: weights,
       applicantsCount: 0,
       createdAt: new Date().toISOString().slice(0, 10),
@@ -159,6 +307,7 @@ const handleSliderChange = (
 
     setForm(initialForm);
     setSkillsInput('');
+    setKeywordsInput('');
     setWeights({
       Creativity: 20,
       Leadership: 20,
@@ -170,11 +319,24 @@ const handleSliderChange = (
   };
 
   const mismatch = detectMismatch(form.title, form.department, form.description);
-  const jdAnalysis = analyzeJD(form.description, skillsInput);
+  
+  const jdAnalysis = useMemo(() => {
+    return analyzeJD(
+      form.description,
+      skillsInput,
+      form.salaryRange || '',
+      form.experienceLevel || '',
+      form.certifications || '',
+      form.title,
+      keywordsInput
+    );
+  }, [form.description, skillsInput, form.salaryRange, form.experienceLevel, form.certifications, form.title, keywordsInput]);
+
   const ratingColors = {
+    Excellent: 'text-brand-mint bg-brand-mint/5 border-brand-mint/15',
     Good: 'text-brand-mint bg-brand-mint/5 border-brand-mint/15',
     Average: 'text-brand-purple bg-brand-purple/5 border-brand-purple/15',
-    Bad: 'text-brand-orange bg-brand-orange/5 border-brand-orange/20',
+    Poor: 'text-brand-orange bg-brand-orange/5 border-brand-orange/20',
   };
 
   return (
@@ -192,7 +354,7 @@ const handleSliderChange = (
           <div className="space-y-4">
             {/* Mismatch Warning Banner */}
             {mismatch && (
-              <div className="rounded-xl border border-brand-orange/20 bg-brand-orange/5 p-4 text-xs">
+              <div className="rounded-xl border border-brand-orange/20 bg-brand-orange/5 p-4 text-xs transition duration-200">
                 <div className="flex items-center gap-1.5 font-bold text-brand-orange uppercase folio-mono mb-1.5">
                   <AlertTriangle className="h-3.5 w-3.5" />
                   <span>Mismatch Warning</span>
@@ -209,6 +371,19 @@ const handleSliderChange = (
               </div>
             )}
 
+            {/* Duplicate Warning Banner */}
+            {hasDuplicateWarning && (
+              <div className="rounded-xl border border-brand-purple/20 bg-brand-purple/5 p-4 text-xs transition duration-200">
+                <div className="flex items-center gap-1.5 font-bold text-brand-purple uppercase folio-mono mb-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span>Duplicate Warning</span>
+                </div>
+                <p className="text-stone-600 leading-relaxed">
+                  A job requisition with the same Title, Department, and Location already exists. You can still add this, but please verify if it is a duplicate.
+                </p>
+              </div>
+            )}
+
             <div>
               <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase">
                 Job Title
@@ -220,6 +395,23 @@ const handleSliderChange = (
                 placeholder="Senior React Engineer" 
               />
               {errors.title && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.title}</p>}
+              
+              {/* Title Suggestions */}
+              {titleSuggestions.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5 items-center transition duration-200">
+                  <span className="text-[10px] text-stone-400 font-sans">Suggestions:</span>
+                  {titleSuggestions.map((sug) => (
+                    <button
+                      key={sug}
+                      type="button"
+                      onClick={() => setForm({ ...form, title: sug })}
+                      className="text-[9.5px] text-[#5B4FE9] bg-[#5B4FE9]/5 border border-[#5B4FE9]/10 px-2 py-0.5 rounded-full hover:bg-[#5B4FE9]/10 transition duration-200 cursor-pointer"
+                    >
+                      {sug}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             
             <div className="grid gap-3 sm:grid-cols-2">
@@ -255,7 +447,7 @@ const handleSliderChange = (
               <button
                 type="button"
                 onClick={() => setShowRequirements(true)}
-                className="w-full rounded-xl border border-brand-purple/20 bg-brand-purple/5 px-4 py-3 text-sm font-semibold text-brand-purple hover:bg-brand-purple/10"
+                className="w-full rounded-xl border border-brand-purple/20 bg-brand-purple/5 px-4 py-3 text-sm font-semibold text-brand-purple hover:bg-brand-purple/10 transition duration-200"
               >
                 Configure Requirements
               </button>
@@ -318,16 +510,30 @@ const handleSliderChange = (
               </div>
             </div>
 
-            <div>
-              <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase">
-                Required Skills (Comma-separated)
-              </label>
-              <input 
-                className="input" 
-                value={skillsInput} 
-                onChange={(event) => setSkillsInput(event.target.value)} 
-                placeholder="React, TypeScript, CSS" 
-              />
+            <div className="space-y-4">
+              <div>
+                <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase">
+                  Required Skills (Comma-separated)
+                </label>
+                <input
+                  className="input"
+                  value={skillsInput}
+                  onChange={(event) => setSkillsInput(event.target.value)}
+                  placeholder="React, TypeScript, CSS"
+                />
+              </div>
+
+              <div>
+                <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wider">
+                  Keywords (Comma-separated)
+                </label>
+                <input
+                  className="input"
+                  value={keywordsInput}
+                  onChange={(event) => setKeywordsInput(event.target.value)}
+                  placeholder="AI, React, Leadership, UI/UX"
+                />
+              </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
@@ -387,11 +593,11 @@ const handleSliderChange = (
 
             {/* JD Quality Analysis Widget */}
             {form.description.length > 0 && (
-              <div className="rounded-xl border border-[#ECE8E2] bg-white p-3.5 shadow-sm text-xs">
+              <div className="rounded-xl border border-[#ECE8E2] bg-white p-3.5 shadow-sm text-xs transition duration-200">
                 <div className="flex items-center justify-between border-b border-[#ECE8E2] pb-2 mb-2">
                   <span className="folio-mono text-[9px] uppercase tracking-wider text-stone-500 font-bold flex items-center gap-1">
                     <Sparkles className="h-3 w-3 text-brand-purple" />
-                    JD Quality Analysis
+                    JD Quality Analysis ({jdAnalysis.score}%)
                   </span>
                   <span className={`folio-mono text-[9.5px] font-bold uppercase tracking-wider border px-2 py-0.5 rounded ${ratingColors[jdAnalysis.rating]}`}>
                     {jdAnalysis.rating} Quality
@@ -404,7 +610,7 @@ const handleSliderChange = (
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-brand-mint font-semibold text-[10.5px]">✓ Content meets standard guidelines for discovery indexing.</p>
+                  <p className="text-brand-mint font-semibold text-[10.5px]">✓ Content meets all standard guidelines for discovery indexing.</p>
                 )}
               </div>
             )}
@@ -421,7 +627,7 @@ const handleSliderChange = (
               </button>
               
               {showRequirements && (
-                <div className="mt-4 p-4 border border-[#ECE8E2] bg-white rounded-xl space-y-4 shadow-inner">
+                <div className="mt-4 p-4 border border-[#ECE8E2] bg-white rounded-xl space-y-4 shadow-inner transition duration-300">
                   <p className="text-[10.5px] text-stone-500 leading-normal mb-2 font-sans">
                        Rate each competency independently from 0–100.
                   </p>
@@ -447,7 +653,7 @@ const handleSliderChange = (
             </div>
 
             <button 
-              className="button-primary w-full py-3.5 mt-2 flex items-center justify-center font-bold hover:bg-brand-orange transition duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
+              className="button-primary w-full py-3.5 mt-2 flex items-center justify-center font-bold hover:bg-brand-orange transition duration-200 hover:scale-[1.01] active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
               type="submit"
               disabled={isSaving}
             >
@@ -478,153 +684,206 @@ const handleSliderChange = (
           </div>
           
           <div className="divide-y divide-[#ECE8E2]">
-            {filteredJobs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center text-center py-12 px-6 border-stone-100 rounded-2xl bg-stone-50/20">
-                <Search className="h-10 w-10 text-stone-400 mb-3" strokeWidth={1.5} />
-                <h3 className="font-sans font-semibold text-sm text-brand-navy">No requisitions found</h3>
-                <p className="mt-1 text-xs text-[#6D6B8D] max-w-xs">Try adjusting your search query or add a new job requisition in the panel on the left.</p>
+            {jobs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center py-16 px-6 border-stone-100 rounded-2xl bg-stone-50/20">
+                <div className="h-12 w-12 rounded-full bg-[#5B4FE9]/5 flex items-center justify-center mb-4">
+                  <Plus className="h-6 w-6 text-[#5B4FE9]" strokeWidth={1.5} />
+                </div>
+                <h3 className="font-sans font-semibold text-sm text-brand-navy">Create your first job requisition</h3>
+                <p className="mt-1 text-xs text-[#6D6B8D] max-w-sm">Use the form on the left to set up a new job opening. You can define details, required skills, and custom requirements weights.</p>
+              </div>
+            ) : filteredJobs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center py-16 px-6 border-stone-100 rounded-2xl bg-stone-50/20">
+                <div className="h-12 w-12 rounded-full bg-stone-100 flex items-center justify-center mb-4">
+                  <Search className="h-6 w-6 text-stone-400" strokeWidth={1.5} />
+                </div>
+                <h3 className="font-sans font-semibold text-sm text-brand-navy">No matching requisitions</h3>
+                <p className="mt-1 text-xs text-[#6D6B8D] max-w-sm">No jobs matched "{query}". Try checking your spelling or search for skills, department, status, or location.</p>
               </div>
             ) : (
-              filteredJobs.map((job) => (
-                <article key={job.id} className="p-6 bg-white hover:bg-stone-50/20 transition-all duration-200 hover:translate-x-[2px]">
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div className="space-y-2 flex-1 min-w-[260px]">
-                      <div className="flex flex-wrap items-center gap-2.5">
-                        <h3 className="folio-card-title text-brand-navy leading-tight">{job.title}</h3>
-                        <div className="flex gap-1 flex-wrap">
-                          <StatusBadge value={job.status} />
-                          <StatusBadge value={job.priority} />
+              filteredJobs.map((job) => {
+                const scoreDetails = analyzeJD(
+                  job.description || '',
+                  (job.requiredSkills || []).join(','),
+                  job.salaryRange || '',
+                  job.experienceLevel || '',
+                  job.certifications || '',
+                  job.title || '',
+                  (job.keywords || []).join(',')
+                );
+                
+                const topWeights = getTopWeights(job.requirementsWeights);
+                const aiInsights = getAIInsights(job);
+
+                return (
+                  <article key={job.id} className="p-6 bg-white hover:bg-stone-50/20 transition-all duration-300 hover:shadow-md hover:translate-x-[2px] border-b border-[#ECE8E2] last:border-b-0">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="space-y-2 flex-1 min-w-[260px]">
+                        <div className="flex flex-wrap items-center gap-2.5">
+                          <h3 className="folio-card-title text-brand-navy leading-tight font-bold text-lg">{job.title}</h3>
+                          <div className="flex gap-1 flex-wrap">
+                            <StatusBadge value={job.status} />
+                            <StatusBadge value={job.priority} />
+                            <span className={`text-[9.5px] font-mono font-bold uppercase tracking-wider border px-2 py-0.5 rounded-full ${ratingColors[scoreDetails.rating]}`}>
+                              JD: {scoreDetails.score}%
+                            </span>
+                          </div>
+                        </div>
+                        <p className="max-w-2xl text-xs leading-relaxed text-[#6D6B8D]">{job.description}</p>
+                      </div>
+                      <select 
+                        className="w-full sm:w-32 input py-2 text-xs cursor-pointer font-bold transition duration-200" 
+                        value={job.status} 
+                        onChange={(event) => void updateItem(job.id, { status: event.target.value as Job['status'] })}
+                      >
+                        <option>Active</option>
+                        <option>Draft</option>
+                        <option>Closed</option>
+                        <option>Archived</option>
+                      </select>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 grid-cols-2 sm:grid-cols-4 border-t border-[#ECE8E2] pt-4">
+                      <Field label="Department" value={job.department} />
+                      <Field label="Location" value={job.location} />
+                      <Field label="Applicants" value={job.applicantsCount.toString()} />
+                      <Field label="Hiring Manager" value={job.hiringManager} />
+                      {job.experienceLevel && <Field label="Experience" value={job.experienceLevel} />}
+                      {job.salaryRange && <Field label="Salary Range" value={job.salaryRange} />}
+                      {job.certifications && <Field label="Certifications" value={job.certifications} />}
+                    </div>
+
+                    {topWeights.length > 0 && (
+                      <div className="mt-3.5 flex flex-wrap gap-1.5 items-center">
+                        <span className="folio-mono text-[8px] uppercase tracking-wider text-[#6D6B8D] font-bold">Top Requirements:</span>
+                        {topWeights.map(([skill, val]) => (
+                          <span key={skill} className="text-[9.5px] font-mono font-medium text-brand-purple bg-brand-purple/5 border border-brand-purple/10 px-2 py-0.5 rounded">
+                            {skill} ({val}%)
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {job.requiredSkills && job.requiredSkills.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1.5 items-center">
+                        <span className="folio-mono text-[8px] uppercase tracking-wider text-[#6D6B8D] font-bold">Skills:</span>
+                        {job.requiredSkills.map(skill => (
+                          <span key={skill} className="text-[9px] font-mono font-medium text-stone-500 bg-stone-50 border border-stone-200/60 px-1.5 py-0.5 rounded">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {job.keywords && job.keywords.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1.5 items-center">
+                        <span className="folio-mono text-[8px] uppercase tracking-wider text-[#6D6B8D] font-bold">Keywords:</span>
+                        {job.keywords.map(keyword => (
+                          <span key={keyword} className="text-[9px] font-mono font-medium text-brand-purple bg-brand-purple/10 border border-brand-purple/20 px-2 py-0.5 rounded-full">
+                            {keyword}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {aiInsights.length > 0 && (
+                      <div className="mt-4 p-3 bg-stone-50/50 border border-stone-100 rounded-xl">
+                        <div className="flex items-center gap-1 mb-1.5">
+                          <Sparkles className="h-3 w-3 text-brand-purple" />
+                          <span className="folio-mono text-[8px] uppercase tracking-wider text-stone-500 font-bold">AI Insights</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {aiInsights.map((insight, idx) => (
+                            <span key={idx} className="text-[9.5px] font-sans font-medium text-stone-600 bg-white border border-stone-200/65 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-sm">
+                              <span className="h-1.5 w-1.5 rounded-full bg-[#5B4FE9]"></span>
+                              {insight}
+                            </span>
+                          ))}
                         </div>
                       </div>
-                      <p className="max-w-2xl text-xs leading-relaxed text-[#6D6B8D]">{job.description}</p>
-                    </div>
-                    <select 
-                      className="w-full sm:w-32 input py-2 text-xs cursor-pointer font-bold transition" 
-                      value={job.status} 
-                      onChange={(event) => void updateItem(job.id, { status: event.target.value as Job['status'] })}
-                    >
-                      <option>Active</option>
-                      <option>Draft</option>
-                      <option>Closed</option>
-                      <option>Archived</option>
-                    </select>
-                  </div>
-                  <div className="mt-4 grid gap-4 grid-cols-2 sm:grid-cols-4 border-t border-[#ECE8E2] pt-4.5">
-                    <Field label="Department" value={job.department} />
-                    <Field label="Location" value={job.location} />
-                    <Field label="Applicants" value={job.applicantsCount.toString()} />
-                    <Field label="Hiring Manager" value={job.hiringManager} />
-                    {job.experienceLevel && <Field label="Experience" value={job.experienceLevel} />}
-                    {job.salaryRange && <Field label="Salary Range" value={job.salaryRange} />}
-                    {job.certifications && <Field label="Certifications" value={job.certifications} />}
-                  </div>
-                  {job.requiredSkills && job.requiredSkills.length > 0 && (
-                    <div className="mt-3.5 flex flex-wrap gap-1.5 items-center">
-                      <span className="folio-mono text-[8px] uppercase tracking-wider text-[#6D6B8D] font-bold">Skills:</span>
-                      {job.requiredSkills.map(skill => (
-                        <span key={skill} className="text-[9px] font-mono font-medium text-stone-500 bg-stone-50 border border-stone-200/60 px-1.5 py-0.5 rounded">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </article>
-              ))
+                    )}
+                  </article>
+                );
+              })
             )}
           </div>
         </section>
       </div>
+
       {showRequirements && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-    <div className="w-[700px] max-h-[85vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
-      
-      <h2 className="text-xl font-bold mb-6">
-        Requirements Builder
-      </h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-[700px] max-h-[85vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
+            <h2 className="text-xl font-bold mb-6">Requirements Builder</h2>
+            {skillsList.map((skill) => (
+              <div key={skill} className="mb-5">
+                <div className="flex justify-between mb-2">
+                  <span>{skill}</span>
+                  <span>{weights[skill]}%</span>
+                </div>
 
-    {skillsList.map((skill) => (
-  <div key={skill} className="mb-5">
-  <div className="flex justify-between mb-2">
-    <span>{skill}</span>
-    <span>{weights[skill]}%</span>
-  </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleSliderChange(skill, Math.max(0, weights[skill] - 5))}
+                    className="h-8 w-8 rounded-full border hover:bg-stone-50 transition"
+                  >
+                    -
+                  </button>
 
-  <div className="flex items-center gap-3">
+                  <div className="relative flex-1">
+                    <div className="h-2 w-full rounded-full bg-gray-200">
+                      <div
+                        className="h-2 rounded-full bg-brand-purple"
+                        style={{ width: `${weights[skill]}%` }}
+                      />
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={weights[skill]}
+                      onChange={(e) => handleSliderChange(skill, Number(e.target.value))}
+                      className="absolute inset-0 w-full opacity-0 cursor-pointer"
+                    />
+                  </div>
 
-    <button
-      type="button"
-      onClick={() =>
-        handleSliderChange(skill, Math.max(0, weights[skill] - 5))
-      }
-      className="h-8 w-8 rounded-full border"
-    >
-      -
-    </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSliderChange(skill, Math.min(100, weights[skill] + 5))}
+                    className="h-8 w-8 rounded-full border hover:bg-stone-50 transition"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            ))}
 
-    <div className="relative flex-1">
-      <div className="h-2 w-full rounded-full bg-gray-200">
-        <div
-          className="h-2 rounded-full bg-brand-purple"
-          style={{
-            width: `${weights[skill]}%`,
-          }}
-        />
-      </div>
+            <div className="mt-8 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowRequirements(false)}
+                className="rounded-lg border px-4 py-2 hover:bg-stone-50 transition cursor-pointer"
+              >
+                Cancel
+              </button>
 
-      <input
-        type="range"
-        min="0"
-        max="100"
-        value={weights[skill]}
-        onChange={(e) =>
-          handleSliderChange(skill, Number(e.target.value))
-        }
-        className="absolute inset-0 w-full opacity-0 cursor-pointer"
-      />
-    </div>
-
-    <button
-      type="button"
-      onClick={() =>
-        handleSliderChange(skill, Math.min(100, weights[skill] + 5))
-      }
-      className="h-8 w-8 rounded-full border"
-    >
-      +
-    </button>
-
-  </div>
-</div>
-  
-))}
-
-      <div className="mt-8 flex justify-end gap-3">
-        <button
-          type="button"
-          onClick={() => setShowRequirements(false)}
-          className="rounded-lg border px-4 py-2"
-        >
-          Cancel
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            setForm({
-              ...form,
-              requirementsWeights: weights,
-            });
-
-            setShowRequirements(false);
-          }}
-          className="rounded-lg bg-brand-purple px-5 py-2 text-white"
-        >
-          OK
-        </button>
-      </div>
-    </div>
-  </div>
-)}``  
+              <button
+                type="button"
+                onClick={() => {
+                  setForm({
+                    ...form,
+                    requirementsWeights: weights,
+                  });
+                  setShowRequirements(false);
+                }}
+                className="rounded-lg bg-brand-purple px-5 py-2 text-white hover:bg-brand-purple/90 transition cursor-pointer"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -637,3 +896,5 @@ function Field({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+export default JobsPage;

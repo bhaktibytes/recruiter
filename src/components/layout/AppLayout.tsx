@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BriefcaseBusiness, Building2, CalendarClock, Gauge, LogOut, Settings2, SlidersHorizontal, UsersRound, Handshake } from 'lucide-react';
+import { Bell, BriefcaseBusiness, Building2, CalendarClock, Gauge, LogOut, Settings2, UsersRound, Handshake } from 'lucide-react';
 import { useAuth } from '@/contexts/useAuth';
 import { useCollection } from '@/hooks/useCollection';
 import type { NotificationItem } from '@/types';
@@ -30,7 +30,7 @@ export default function AppLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { items: notifications, updateItem } = useCollection<NotificationItem>('notifications');
+  const { items: notifications} = useCollection<NotificationItem>('notifications');
   const [showNotifPopover, setShowNotifPopover] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 

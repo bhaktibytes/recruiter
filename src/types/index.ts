@@ -24,6 +24,7 @@ export interface Job {
   experienceLevel?: 'Junior' | 'Mid-level' | 'Senior' | 'Lead';
   salaryRange?: string;
   requiredSkills?: string[];
+  keywords?: string[];
   certifications?: string;
   requirementsWeights?: Record<string, number>;
 }

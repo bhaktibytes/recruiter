@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search, AlertTriangle, Sparkles, ArrowLeft, ChevronDown } from 'lucide-react';
+import { Plus, Search, AlertTriangle, Sparkles, ArrowLeft, ChevronDown, Trash2 } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useCollection } from '@/hooks/useCollection';
 import type { Job } from '@/types';
@@ -243,6 +243,18 @@ export default function JobsPage() {
     }
   };
 
+  const handleKeywordSuggestionClick = (keyword: string) => {
+    const currentVal = keywordsInput.trim();
+    if (!currentVal) {
+      setKeywordsInput(keyword);
+    } else {
+      const parts = cleanCommaString(currentVal);
+      if (!parts.includes(keyword)) {
+        setKeywordsInput(`${currentVal}, ${keyword}`);
+      }
+    }
+  };
+
   const handleAddCustomRequirement = () => {
     const trimmed = customReqName.trim();
     if (!trimmed) {
@@ -475,7 +487,7 @@ export default function JobsPage() {
               </button>
             </div>
 
-            <form onSubmit={createJob} className="space-y-6 pt-2 w-full">
+            <form onSubmit={createJob} className="space-y-4 pt-1 w-full">
               {mismatch && (
                 <div className="rounded-xl border border-brand-orange/20 bg-brand-orange/5 p-4 text-xs">
                   <div className="flex items-center gap-1.5 font-bold text-brand-orange uppercase folio-mono mb-1.5">
@@ -506,127 +518,123 @@ export default function JobsPage() {
                 </div>
               )}
 
-              <div>
-                <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Job Title</label>
-                <input 
-                  className={`input w-full ${errors.title ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`}
-                  value={form.title} 
-                  onChange={(event) => handleChange('title', event.target.value)} 
-                  placeholder="Senior React Engineer" 
-                />
-                {errors.title && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.title}</p>}
+              {/* Group 1: Basic Information */}
+              <div className="bg-white border border-[#ECE8E2] p-5 rounded-2xl space-y-4 shadow-xs">
+                <h3 className="text-xs font-bold text-brand-navy tracking-tight border-b border-[#ECE8E2] pb-2 mb-4" style={labelFontStyle}>
+                  Basic Information
+                </h3>
                 
-                {titleSuggestions.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1.5 items-center transition duration-200">
-                    <span className="text-[10px] text-stone-400 font-sans" style={labelFontStyle}>Suggestions:</span>
-                    {titleSuggestions.map((sug) => (
-                      <button
-                        key={sug}
-                        type="button"
-                        onClick={() => handleChange('title', sug)}
-                        className="text-[9.5px] text-[#5B4FE9] bg-[#5B4FE9]/5 border border-[#5B4FE9]/10 px-2 py-0.5 rounded-full hover:bg-[#5B4FE9]/10 transition duration-200 cursor-pointer"
-                        style={labelFontStyle}
-                      >
-                        {sug}
-                      </button>
-                    ))}
+                <div>
+                  <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[10px] font-bold" style={labelFontStyle}>Job Title</label>
+                  <input 
+                    className={`input w-full ${errors.title ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`}
+                    value={form.title} 
+                    onChange={(event) => handleChange('title', event.target.value)} 
+                    placeholder="Senior React Engineer" 
+                  />
+                  {errors.title && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.title}</p>}
+                  
+                  {titleSuggestions.length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap gap-1.5 items-center">
+                      <span className="text-[9.5px] text-stone-400 font-sans" style={labelFontStyle}>Suggestions:</span>
+                      {titleSuggestions.map((sug) => (
+                        <button
+                          key={sug}
+                          type="button"
+                          onClick={() => handleChange('title', sug)}
+                          className="text-[9px] text-[#5B4FE9] bg-[#5B4FE9]/5 border border-[#5B4FE9]/10 px-2 py-0.5 rounded-full hover:bg-[#5B4FE9]/10 transition duration-200 cursor-pointer font-bold"
+                          style={labelFontStyle}
+                        >
+                          {sug}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div>
+                    <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[10px] font-bold" style={labelFontStyle}>Company</label>
+                    <input 
+                      className={`input w-full ${errors.company ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`} 
+                      value={form.company || ''} 
+                      onChange={(event) => handleChange('company', event.target.value)} 
+                      placeholder="e.g. Razorpay"
+                    />
+                    {errors.company && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.company}</p>}
                   </div>
-                )}
-              </div>
-              
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div>
-                  <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Company</label>
-                  <input 
-                    className={`input w-full ${errors.company ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`} 
-                    value={form.company || ''} 
-                    onChange={(event) => handleChange('company', event.target.value)} 
-                    placeholder="e.g. Razorpay"
-                  />
-                  {errors.company && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.company}</p>}
-                </div>
-                <div>
-                  <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Department</label>
-                  <input 
-                    className="input w-full" 
-                    value={form.department} 
-                    onChange={(event) => handleChange('department', event.target.value)} 
-                  />
-                </div>
-                <div>
-                  <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Location</label>
-                  <input 
-                    className={`input w-full ${errors.location ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`} 
-                    value={form.location} 
-                    onChange={(event) => handleChange('location', event.target.value)} 
-                  />
-                  {errors.location && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.location}</p>}
+                  <div>
+                    <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[10px] font-bold" style={labelFontStyle}>Department</label>
+                    <input 
+                      className="input w-full" 
+                      value={form.department} 
+                      onChange={(event) => handleChange('department', event.target.value)} 
+                    />
+                  </div>
+                  <div>
+                    <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[10px] font-bold" style={labelFontStyle}>Location</label>
+                    <input 
+                      className={`input w-full ${errors.location ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`} 
+                      value={form.location} 
+                      onChange={(event) => handleChange('location', event.target.value)} 
+                    />
+                    {errors.location && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.location}</p>}
+                  </div>
                 </div>
               </div>
 
-              {/* Hiring Requirements directly in the Job Creation form */}
-              <div className="rounded-xl border border-[#ECE8E2] bg-[#FAF9F7]/60 p-5 space-y-4">
-                <div>
-                  <h3 className="text-sm font-bold text-brand-navy" style={labelFontStyle}>Hiring Requirements</h3>
-                  <p className="text-[10px] text-[#6D6B8D] uppercase tracking-wider font-semibold mt-0.5">Define weights for applicant matching.</p>
+              {/* Group 2: Hiring Requirements */}
+              <div className="bg-white border border-[#ECE8E2] p-5 rounded-2xl space-y-3.5 shadow-xs animate-slide-up">
+                <div className="border-b border-[#ECE8E2] pb-1.5 mb-1.5">
+                  <h3 className="text-xs font-bold text-brand-navy tracking-tight" style={labelFontStyle}>
+                    Hiring Requirements
+                  </h3>
+                  <p className="text-[10px] text-[#6D6B8D] mt-0.5" style={labelFontStyle}>
+                    Define weights for candidate matching metrics.
+                  </p>
                 </div>
                 
-                <div className="space-y-4 pt-2">
+                {/* Compact single-row layout for sliders directly on the card surface */}
+                <div className="divide-y divide-[#ECE8E2]/60 border-t border-b border-[#ECE8E2]/60 py-0.5">
                   {Object.entries(weights).map(([skill, val]) => (
-                    <div key={skill} className="bg-white border border-[#ECE8E2] p-4 rounded-xl shadow-xs">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs font-bold text-brand-navy" style={labelFontStyle}>{skill}</span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs font-mono font-bold text-brand-purple">{val}%</span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveRequirement(skill)}
-                            className="text-[10px] text-rose-500 hover:text-rose-700 font-bold transition cursor-pointer"
-                          >
-                            Remove
-                          </button>
-                        </div>
+                    <div key={skill} className="flex items-center justify-between gap-4 py-1.5">
+                      <span className="text-[11.5px] font-bold text-brand-navy w-28 md:w-36 flex-shrink-0 truncate" style={labelFontStyle}>
+                        {skill}
+                      </span>
+                      
+                      <div className="flex-1 min-w-[80px] flex items-center">
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={val}
+                          onChange={(e) => handleSliderChange(skill, Number(e.target.value))}
+                          className="w-full accent-brand-purple h-1 bg-stone-200 rounded-lg cursor-pointer"
+                        />
                       </div>
                       
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => handleSliderChange(skill, Math.max(0, val - 5))}
-                          className="h-7 w-7 rounded-full border border-stone-200 flex items-center justify-center hover:bg-stone-50 font-bold text-xs"
-                        >
-                          -
-                        </button>
-                        <div className="relative flex-1">
-                          <div className="h-1.5 w-full rounded-full bg-gray-200">
-                            <div className="h-1.5 rounded-full bg-brand-purple" style={{ width: `${val}%` }} />
-                          </div>
-                          <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            value={val}
-                            onChange={(e) => handleSliderChange(skill, Number(e.target.value))}
-                            className="absolute inset-0 w-full opacity-0 cursor-pointer"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleSliderChange(skill, Math.min(100, val + 5))}
-                          className="h-7 w-7 rounded-full border border-stone-200 flex items-center justify-center hover:bg-stone-50 font-bold text-xs"
-                        >
-                          +
-                        </button>
-                      </div>
+                      <span className="text-xs font-mono font-bold text-brand-purple w-10 text-right flex-shrink-0">
+                        {val}%
+                      </span>
+                      
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveRequirement(skill)}
+                        className="p-1 text-stone-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 transition duration-150 cursor-pointer flex-shrink-0"
+                        aria-label={`Remove ${skill}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   ))}
                 </div>
 
                 {/* Add Custom Requirement Field */}
-                <div className="pt-3 border-t border-[#ECE8E2] flex flex-col gap-2">
-                  <label className="block text-[10px] font-mono tracking-widest text-[#6D6B8D] uppercase font-bold" style={labelFontStyle}>
+                <div className="pt-1.5 flex flex-col gap-1.5">
+                  <label className="block text-[10px] uppercase tracking-wide font-bold text-[#6D6B8D]" style={labelFontStyle}>
                     Add Custom Requirement
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex border border-[#ECE8E2] rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#5B4FE9]/10 focus-within:border-[#5B4FE9] bg-white transition duration-150">
                     <input
                       type="text"
                       value={customReqName}
@@ -635,12 +643,12 @@ export default function JobsPage() {
                         setCustomReqError('');
                       }}
                       placeholder="e.g. Adaptability"
-                      className="input flex-1 text-xs"
+                      className="w-full border-0 focus:ring-0 px-3 py-2 text-xs font-sans outline-hidden bg-transparent"
                     />
                     <button
                       type="button"
                       onClick={handleAddCustomRequirement}
-                      className="bg-brand-navy hover:bg-brand-navy/90 text-white px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer"
+                      className="bg-brand-navy hover:bg-brand-navy/90 text-white px-4 py-2 text-xs font-bold transition duration-150 flex-shrink-0 border-l border-[#ECE8E2]/60 cursor-pointer"
                       style={labelFontStyle}
                     >
                       Add
@@ -652,156 +660,199 @@ export default function JobsPage() {
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Hiring Manager</label>
-                  <input 
-                    className={`input w-full ${errors.hiringManager ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`}
-                    value={form.hiringManager} 
-                    onChange={(event) => handleChange('hiringManager', event.target.value)} 
-                    placeholder="Manager name" 
-                  />
-                  {errors.hiringManager && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.hiringManager}</p>}
+              {/* Group 3: Job Details */}
+              <div className="bg-white border border-[#ECE8E2] p-5 rounded-2xl space-y-4 shadow-xs">
+                <h3 className="text-xs font-bold text-brand-navy tracking-tight border-b border-[#ECE8E2] pb-2 mb-4" style={labelFontStyle}>
+                  Job Details
+                </h3>
+                
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[10px] font-bold" style={labelFontStyle}>Hiring Manager</label>
+                    <input 
+                      className={`input w-full ${errors.hiringManager ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`}
+                      value={form.hiringManager} 
+                      onChange={(event) => handleChange('hiringManager', event.target.value)} 
+                      placeholder="Manager name" 
+                    />
+                    {errors.hiringManager && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.hiringManager}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[10px] font-bold" style={labelFontStyle}>Experience Level</label>
+                    <select 
+                      className={`input w-full cursor-pointer font-sans ${errors.experienceLevel ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`}
+                      value={form.experienceLevel} 
+                      onChange={(event) => handleChange('experienceLevel', event.target.value as Job['experienceLevel'])}
+                    >
+                      <option value="">Select Level</option>
+                      <option value="Junior">Junior</option>
+                      <option value="Mid-level">Mid-level</option>
+                      <option value="Senior">Senior</option>
+                      <option value="Lead">Lead</option>
+                    </select>
+                    {errors.experienceLevel && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.experienceLevel}</p>}
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Experience Level</label>
-                  <select 
-                    className={`input w-full cursor-pointer font-sans ${errors.experienceLevel ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`}
-                    value={form.experienceLevel} 
-                    onChange={(event) => handleChange('experienceLevel', event.target.value as Job['experienceLevel'])}
-                  >
-                    <option value="">Select Level</option>
-                    <option value="Junior">Junior</option>
-                    <option value="Mid-level">Mid-level</option>
-                    <option value="Senior">Senior</option>
-                    <option value="Lead">Lead</option>
-                  </select>
-                  {errors.experienceLevel && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.experienceLevel}</p>}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[10px] font-bold" style={labelFontStyle}>Salary Range</label>
+                    <input 
+                      className="input w-full" 
+                      value={form.salaryRange} 
+                      onChange={(event) => handleChange('salaryRange', event.target.value)} 
+                      placeholder="e.g. $80,000 - $110,000" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[10px] font-bold" style={labelFontStyle}>Certifications</label>
+                    <input 
+                      className="input w-full" 
+                      value={form.certifications} 
+                      onChange={(event) => handleChange('certifications', event.target.value)} 
+                      placeholder="e.g. AWS Solutions Architect" 
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div>
+                    <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[10px] font-bold" style={labelFontStyle}>Type</label>
+                    <select 
+                      className={`input w-full cursor-pointer ${errors.type ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`} 
+                      value={form.type} 
+                      onChange={(event) => handleChange('type', event.target.value as Job['type'])}
+                    >
+                      <option value="">Select Type</option>
+                      <option value="Full-time">Full-time</option>
+                      <option value="Internship">Internship</option>
+                      <option value="Contract">Contract</option>
+                    </select>
+                    {errors.type && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.type}</p>}
+                  </div>
+                  <div>
+                    <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[10px] font-bold" style={labelFontStyle}>Priority</label>
+                    <select 
+                      className="input w-full cursor-pointer" 
+                      value={form.priority} 
+                      onChange={(event) => handleChange('priority', event.target.value as Job['priority'])}
+                    >
+                      <option>Critical</option>
+                      <option>High</option>
+                      <option>Medium</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[10px] font-bold" style={labelFontStyle}>Target Date</label>
+                    <input 
+                      className={`input w-full cursor-pointer ${errors.targetDate ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`}
+                      type="date" 
+                      value={form.targetDate} 
+                      onChange={(event) => handleChange('targetDate', event.target.value)} 
+                    />
+                    {errors.targetDate && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.targetDate}</p>}
+                  </div>
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Salary Range</label>
-                  <input 
-                    className="input w-full" 
-                    value={form.salaryRange} 
-                    onChange={(event) => handleChange('salaryRange', event.target.value)} 
-                    placeholder="e.g. $80,000 - $110,000" 
-                  />
-                </div>
-
-                <div>
-                  <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Certifications</label>
-                  <input 
-                    className="input w-full" 
-                    value={form.certifications} 
-                    onChange={(event) => handleChange('certifications', event.target.value)} 
-                    placeholder="e.g. AWS Solutions Architect" 
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Required Skills (Comma-separated)</label>
+              {/* Group 4: Skills & Keywords */}
+              <div className="bg-white border border-[#ECE8E2] p-5 rounded-2xl space-y-4 shadow-xs">
+                <h3 className="text-xs font-bold text-brand-navy tracking-tight border-b border-[#ECE8E2] pb-2 mb-4" style={labelFontStyle}>
+                  Skills & Keywords
+                </h3>
+                
+                <div className="space-y-1">
+                  <label className="block folio-meta text-[#6D6B8D] mb-1 uppercase tracking-wide text-[10px] font-bold" style={labelFontStyle}>Required Skills (Comma-separated)</label>
                   <input 
                     className={`input w-full ${errors.skills ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`} 
                     value={skillsInput} 
                     onChange={(event) => handleSkillsChange(event.target.value)} 
                     placeholder="React, TypeScript, CSS" 
                   />
+                  <span className="block text-[10px] text-[#6D6B8D]/80 mt-1" style={labelFontStyle}>
+                    Comma-separated skills to build matching index logic.
+                  </span>
                   {errors.skills && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.skills}</p>}
                 </div>
 
-                <div>
-                  <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Keywords (Comma-separated)</label>
+                <div className="space-y-1 pt-1.5">
+                  <label className="block folio-meta text-[#6D6B8D] mb-1 uppercase tracking-wide text-[10px] font-bold" style={labelFontStyle}>Keywords (Comma-separated)</label>
                   <input 
                     className="input w-full" 
                     value={keywordsInput} 
                     onChange={(event) => setKeywordsInput(event.target.value)} 
                     placeholder="AI, React, Leadership, UI/UX" 
                   />
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div>
-                  <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Type</label>
-                  <select 
-                    className={`input w-full cursor-pointer ${errors.type ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`} 
-                    value={form.type} 
-                    onChange={(event) => handleChange('type', event.target.value as Job['type'])}
-                  >
-                    <option value="">Select Type</option>
-                    <option value="Full-time">Full-time</option>
-                    <option value="Internship">Internship</option>
-                    <option value="Contract">Contract</option>
-                  </select>
-                  {errors.type && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.type}</p>}
-                </div>
-                <div>
-                  <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Priority</label>
-                  <select 
-                    className="input w-full cursor-pointer" 
-                    value={form.priority} 
-                    onChange={(event) => handleChange('priority', event.target.value as Job['priority'])}
-                  >
-                    <option>Critical</option>
-                    <option>High</option>
-                    <option>Medium</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Target Date</label>
-                  <input 
-                    className={`input w-full cursor-pointer ${errors.targetDate ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`}
-                    type="date" 
-                    value={form.targetDate} 
-                    onChange={(event) => handleChange('targetDate', event.target.value)} 
-                  />
-                  {errors.targetDate && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.targetDate}</p>}
-                </div>
-              </div>
-
-              <div>
-                <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Description</label>
-                <textarea 
-                  className={`input w-full min-h-24 resize-none font-sans ${errors.description ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`} 
-                  value={form.description} 
-                  onChange={(event) => handleChange('description', event.target.value)} 
-                  placeholder="Job description parameters..."
-                />
-                {errors.description && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.description}</p>}
-              </div>
-
-              {/* JD Quality Analysis indicator in real time */}
-              <div className="rounded-xl border border-[#ECE8E2] bg-white p-4 shadow-sm text-xs">
-                <div className="flex items-center justify-between border-b border-[#ECE8E2] pb-2 mb-2">
-                  <span className="folio-mono text-[9px] uppercase tracking-wider text-stone-500 font-bold flex items-center gap-1">
-                    <Sparkles className="h-3 w-3 text-brand-purple" />
-                    JD Quality Analysis
+                  <span className="block text-[10px] text-[#6D6B8D]/80 mt-1" style={labelFontStyle}>
+                    AI can use these keywords to improve candidate matching.
                   </span>
-                  <span className="flex items-center gap-1.5 font-bold">
-                    {jdAnalysis.rating === 'Good' && <span className="text-brand-mint">🟢 Good</span>}
-                    {jdAnalysis.rating === 'Average' && <span className="text-brand-purple">🟡 Average</span>}
-                    {jdAnalysis.rating === 'Poor' && <span className="text-brand-orange">🔴 Poor</span>}
-                  </span>
-                </div>
-                {jdAnalysis.suggestions.length > 0 ? (
-                  <ul className="space-y-1.5 text-stone-500 list-disc pl-4 text-[10.5px]">
-                    {jdAnalysis.suggestions.map((sug, idx) => (
-                      <li key={idx} className="leading-snug">{sug}</li>
+                  
+                  {/* Lightweight suggested keyword chips */}
+                  <div className="mt-2.5 flex flex-wrap gap-1.5 items-center pt-1">
+                    <span className="text-[9.5px] text-stone-400 font-sans" style={labelFontStyle}>Suggestions:</span>
+                    {['React', 'TypeScript', 'Node.js', 'UI/UX', 'Cloud', 'Leadership', 'API Design'].map((kw) => (
+                      <button
+                        key={kw}
+                        type="button"
+                        onClick={() => handleKeywordSuggestionClick(kw)}
+                        className="text-[9.5px] text-brand-purple bg-brand-purple/5 border border-brand-purple/10 px-2 py-0.5 rounded-full hover:bg-brand-purple/10 transition duration-200 cursor-pointer font-bold"
+                        style={labelFontStyle}
+                      >
+                        +{kw}
+                      </button>
                     ))}
-                  </ul>
-                ) : (
-                  <p className="text-brand-mint font-semibold text-[10.5px]">✓ Content meets standard guidelines for discovery indexing.</p>
-                )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Group 5: Job Description & Group 6: JD Quality Analysis */}
+              <div className="bg-white border border-[#ECE8E2] p-5 rounded-2xl space-y-4 shadow-xs">
+                <h3 className="text-xs font-bold text-brand-navy tracking-tight border-b border-[#ECE8E2] pb-2 mb-4" style={labelFontStyle}>
+                  Job Description & Quality Analysis
+                </h3>
+                
+                <div className="space-y-3">
+                  <label className="block folio-meta text-[#6D6B8D] uppercase tracking-wide text-[10px] font-bold" style={labelFontStyle}>Description</label>
+                  <div className="border border-[#ECE8E2] rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#5B4FE9]/10 focus-within:border-[#5B4FE9] transition duration-150">
+                    <textarea 
+                      className={`w-full min-h-28 px-3.5 py-2.5 outline-hidden text-sm font-sans resize-none border-0 focus:ring-0 ${errors.description ? 'bg-rose-50/20 placeholder-rose-400/70' : ''}`} 
+                      value={form.description} 
+                      onChange={(event) => handleChange('description', event.target.value)} 
+                      placeholder="Enter comprehensive job responsibilities, qualifications, and role requirements..."
+                    />
+                    
+                    {/* Integrated JD Quality Analysis context feedback */}
+                    <div className="border-t border-[#ECE8E2] bg-stone-50/60 p-4 text-xs">
+                      <div className="flex items-center justify-between pb-2 mb-2 border-b border-stone-200/50">
+                        <span className="folio-mono text-[9px] uppercase tracking-wider text-stone-500 font-bold flex items-center gap-1">
+                          <Sparkles className="h-3.5 w-3.5 text-brand-purple" />
+                          JD Quality Analysis
+                        </span>
+                        <span className="flex items-center gap-1.5 font-bold">
+                          {jdAnalysis.rating === 'Good' && <span className="text-brand-mint">🟢 Good</span>}
+                          {jdAnalysis.rating === 'Average' && <span className="text-brand-purple">🟡 Average</span>}
+                          {jdAnalysis.rating === 'Poor' && <span className="text-brand-orange">🔴 Poor</span>}
+                        </span>
+                      </div>
+                      {jdAnalysis.suggestions.length > 0 ? (
+                        <ul className="space-y-1.5 text-stone-500 list-disc pl-4 text-[10.5px]">
+                          {jdAnalysis.suggestions.map((sug, idx) => (
+                            <li key={idx} className="leading-snug">{sug}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-brand-mint font-semibold text-[10.5px]">✓ Content meets standard guidelines for discovery indexing.</p>
+                      )}
+                    </div>
+                  </div>
+                  {errors.description && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.description}</p>}
+                </div>
               </div>
 
               <button 
-                className="button-primary w-full py-4 mt-4 flex items-center justify-center font-bold hover:bg-brand-orange transition duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
+                className="button-primary w-full py-3 mt-2 flex items-center justify-center font-bold hover:bg-brand-orange transition duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
                 type="submit"
                 disabled={isSaving}
               >

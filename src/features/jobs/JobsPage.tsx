@@ -40,7 +40,6 @@ const initialForm: JobForm = {
   },
 };
 
-
 const skillsList = ['Creativity', 'Leadership', 'Teamwork', 'Communication', 'Problem Solving'];
 
 const titleSuggestionsMap: Record<string, string[]> = {
@@ -74,7 +73,7 @@ const normalizeSkills = (input: string): string[] => {
 
 const getTopWeights = (weightsRecord?: Record<string, number>) => {
   const defaultWeights = { Creativity: 20, Leadership: 20, Teamwork: 20, Communication: 20, 'Problem Solving': 20 };
-  const w = weightsRecord || defaultWeights;
+  const w = (weightsRecord && typeof weightsRecord === 'object') ? weightsRecord : defaultWeights;
   return Object.entries(w)
     .filter(([_, val]) => val > 0)
     .sort((a, b) => b[1] - a[1])
@@ -84,7 +83,7 @@ const getTopWeights = (weightsRecord?: Record<string, number>) => {
 const getAIInsights = (job: Job) => {
   const insights: string[] = [];
   const desc = (job.description || '').toLowerCase();
-  const skills = (job.requiredSkills || []).map((s) => s.toLowerCase());
+  const skills = (Array.isArray(job.requiredSkills) ? job.requiredSkills : []).map((s) => s.toLowerCase());
   const weights = job.requirementsWeights || {};
 
   if (desc.includes('react') || skills.includes('react')) {
@@ -96,7 +95,7 @@ const getAIInsights = (job: Job) => {
   if (weights.Leadership && weights.Leadership > 25) {
     insights.push('Leadership weighted heavily');
   }
-  const keywordsCount = (job.keywords || []).length;
+  const keywordsCount = (Array.isArray(job.keywords) ? job.keywords : []).length;
   if (desc.length > 300 && keywordsCount >= 3) {
     insights.push('Good search visibility');
   } else {
@@ -215,17 +214,17 @@ export default function JobsPage() {
     if (!lowerQuery) return jobs;
     return jobs.filter((job) => {
       const fields = [
-        job.title,
-        job.department,
-        job.location,
+        job.title || '',
+        job.department || '',
+        job.location || '',
         job.experienceLevel || '',
-        job.status,
-        job.hiringManager,
+        job.status || '',
+        job.hiringManager || '',
         job.salaryRange || '',
         job.certifications || '',
-        ...(job.keywords || []),
-        ...(job.requiredSkills || [])
-      ].map((f) => f.toLowerCase());
+        ...(Array.isArray(job.keywords) ? job.keywords : []),
+        ...(Array.isArray(job.requiredSkills) ? job.requiredSkills : [])
+      ].map((f) => (f || '').toLowerCase());
       
       return fields.some((f) => f.includes(lowerQuery));
     });
@@ -286,56 +285,23 @@ export default function JobsPage() {
     );
   }, [form.title, form.department, form.location, jobs]);
 
-  const getCurrentErrors = (f: JobForm, req: { skillsText: string; keywordsText: string; w: Record<string, number> }) => {
+  const getCurrentErrors = (f: JobForm) => {
     const now = new Date().toISOString().slice(0, 10);
-
     const next: Record<string, string> = {};
 
-    // Mandatory fields (as per request)
+    // Validate only fields that are actually present in the UI
     if (!f.title.trim()) next.title = 'Job Title is required.';
-
-    if (!f.category) next.category = 'Job Category is required.';
-
-    if (!f.type) next.type = 'Employment Type is required.';
-
-    if (!f.workMode) next.workMode = 'Work Mode is required.';
-
-    if (!f.location.trim()) next.location = 'Location is required.';
-
-    if (!f.experienceRequired?.trim()) next.experienceRequired = 'Experience Required is required.';
-
-    if (!f.salaryRange?.trim()) next.salaryRange = 'Salary Range is required.';
-
-    if (!f.keyResponsibilities?.trim()) next.keyResponsibilities = 'Key Responsibilities are required.';
-
-    const finalSkills = normalizeSkills(req.skillsText);
-    if (finalSkills.length === 0) next.requiredSkills = 'Required Skills are required (add at least 1 skill).';
-
-    if (!f.educationalQualifications?.trim()) next.educationalQualifications = 'Educational Qualifications are required.';
-
-    if (!Number.isFinite(f.numberOfOpenings) || f.numberOfOpenings <= 0) {
-      next.numberOfOpenings = 'Number of Openings must be greater than 0.';
-    }
-
-    if (!f.applicationDeadline?.trim()) next.applicationDeadline = 'Application Deadline is required.';
-    else if (f.applicationDeadline < now) next.applicationDeadline = 'Application Deadline cannot be in the past.';
-
-    // Existing validation kept
     if (!f.hiringManager.trim()) next.hiringManager = 'Hiring Manager is required.';
-
-    // Target Date sanity check (kept from original)
+    if (!f.location.trim()) next.location = 'Location is required.';
     if (f.targetDate < now) next.targetDate = 'Target Date cannot be in the past.';
 
     return next;
   };
 
-
-
-
   const createJob = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const newErrors = getCurrentErrors(form, { skillsText: skillsInput, keywordsText: keywordsInput, w: weights });
+    const newErrors = getCurrentErrors(form);
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -351,18 +317,25 @@ export default function JobsPage() {
     const finalSkills = normalizeSkills(skillsInput);
     const finalKeywords = normalizeKeywords(keywordsInput);
 
-    await addItem({
+    // Populate required database schema fields with fallback values if they are not in the UI
+    const finalFormVal = {
       ...form,
       requiredSkills: finalSkills,
       keywords: finalKeywords,
       requirementsWeights: weights,
+      keyResponsibilities: form.keyResponsibilities?.trim() || form.description || 'Not specified',
+      educationalQualifications: form.educationalQualifications?.trim() || 'Not specified',
+      applicationDeadline: form.applicationDeadline?.trim() || form.targetDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
       applicantsCount: 0,
       createdAt: new Date().toISOString().slice(0, 10),
-    });
+    };
+
+    await addItem(finalFormVal);
     
     setShowSuccessModal(true);
     setTimeout(() => {
       setShowSuccessModal(false);
+      setQuery(''); // Reset search query to make sure the newly created job is visible
       setViewMode('directory');
     }, 1500);
 
@@ -378,7 +351,6 @@ export default function JobsPage() {
     });
     setIsSaving(false);
   };
-
 
   const mismatch = detectMismatch(form.title, form.department, form.description);
   
@@ -732,12 +704,12 @@ export default function JobsPage() {
                 filteredJobs.map((job) => {
                   const scoreDetails = analyzeJD(
                     job.description || '',
-                    (job.requiredSkills || []).join(','),
+                    (Array.isArray(job.requiredSkills) ? job.requiredSkills : []).join(','),
                     job.salaryRange || '',
                     job.experienceLevel || '',
                     job.certifications || '',
                     job.title || '',
-                    (job.keywords || []).join(',')
+                    (Array.isArray(job.keywords) ? job.keywords : []).join(',')
                   );
                   
                   const topWeights = getTopWeights(job.requirementsWeights);
@@ -791,7 +763,7 @@ export default function JobsPage() {
                       <div className="grid gap-4 grid-cols-2 sm:grid-cols-4 md:grid-cols-5 pt-4 w-full">
                         <Field label="Department" value={job.department} />
                         <Field label="Location" value={job.location} />
-                        <Field label="Applicants" value={job.applicantsCount.toString()} isMono={true} />
+                        <Field label="Applicants" value={job.applicantsCount?.toString() || '0'} isMono={true} />
                         <Field label="Hiring Manager" value={job.hiringManager} />
                         {job.experienceLevel && <Field label="Experience" value={job.experienceLevel} />}
                         {job.salaryRange && <Field label="Salary Range" value={job.salaryRange} />}
@@ -811,7 +783,7 @@ export default function JobsPage() {
                       )}
 
                       {/* Skills Chips */}
-                      {job.requiredSkills && job.requiredSkills.length > 0 && (
+                      {Array.isArray(job.requiredSkills) && job.requiredSkills.length > 0 && (
                         <div className="mt-4 flex flex-wrap gap-1.5 items-center">
                           <span className="text-[8.5px] font-mono font-bold uppercase tracking-[0.15em] text-[#6D6B8D]">Skills:</span>
                           {job.requiredSkills.map(skill => (
@@ -823,7 +795,7 @@ export default function JobsPage() {
                       )}
 
                       {/* Keywords Chips */}
-                      {job.keywords && job.keywords.length > 0 && (
+                      {Array.isArray(job.keywords) && job.keywords.length > 0 && (
                         <div className="mt-4 flex flex-wrap gap-1.5 items-center">
                           <span className="text-[8.5px] font-mono font-bold uppercase tracking-[0.15em] text-[#6D6B8D]">Keywords:</span>
                           {job.keywords.map(keyword => (

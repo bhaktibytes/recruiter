@@ -1,4 +1,4 @@
-import { Activity, BriefcaseBusiness, CalendarClock, CheckCircle2, UsersRound, Send, ArrowUpRight, Plus } from 'lucide-react';
+import { Activity, BriefcaseBusiness, CalendarClock, CheckCircle2, UsersRound, Send, ArrowUpRight, Plus, Layers } from 'lucide-react';
 import type { ElementType } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HiringFunnelChart from '@/components/charts/HiringFunnelChart';
@@ -30,11 +30,13 @@ export default function DashboardPage() {
     .sort((a, b) => b.matchScore - a.matchScore)
     .slice(0, 5);
 
+  const labelFontStyle = { fontFamily: '"DM Sans", system-ui, sans-serif' };
+
   return (
      <div className="space-y-6 w-full mx-auto animate-slide-up will-change-transform">
       {/* Page Header - Premium Editorial Command Center */}
       <header className="border-b border-[#ECE8E2] pb-5 mb-4">
-        <h1 className="font-serif text-[32px] tracking-tight text-navy mb-1.5">
+        <h1 className="font-serif text-[32px] tracking-tight text-brand-navy mb-1.5">
           Recruitment Operations
         </h1>
         <p className="max-w-3xl text-[15px] leading-relaxed text-[#1A1C2E99]">
@@ -49,14 +51,21 @@ export default function DashboardPage() {
           <span className="bg-white border border-[#ECE8E2] rounded-lg px-2.5 py-1.5 shadow-sm font-bold">{activeJobs} <span className="text-[#6D6B8D]/70 font-normal">Active Requisitions</span></span>
         </div>
 
-        {/* Recruiter Quick Actions Bar */}
+        {/* Recruiter Quick Actions Bar - Updated to fully reflect the blueprint from WhatsApp Image 2026-06-27 at 5.02.11 PM.jpeg */}
         <div className="flex flex-wrap gap-2.5 mt-7">
           <button 
             onClick={() => navigate('/jobs')} 
             className="button-primary py-2 px-4 flex items-center gap-1.5 text-[10px] font-mono tracking-wider uppercase cursor-pointer"
           >
             <Plus className="h-3.5 w-3.5" />
-            New Requisition
+            Create Job
+          </button>
+          <button 
+            onClick={() => navigate('/pipeline')} 
+            className="button-secondary py-2 px-4 flex items-center gap-1.5 text-[10px] font-mono tracking-wider uppercase cursor-pointer"
+          >
+            <Layers className="h-3.5 w-3.5 text-brand-purple" />
+            View Pipeline
           </button>
           <button 
             onClick={() => navigate('/interviews')} 
@@ -68,8 +77,8 @@ export default function DashboardPage() {
             onClick={() => navigate('/offers')} 
             className="button-secondary py-2 px-4 flex items-center gap-1.5 text-[10px] font-mono tracking-wider uppercase cursor-pointer"
           >
-            <Send className="h-3.5 w-3.5" />
-            Review Offers
+            <Send className="h-3.5 w-3.5 text-brand-mint" />
+            Manage Offers
           </button>
         </div>
       </header>
@@ -114,16 +123,13 @@ export default function DashboardPage() {
         />
       </section>
 
-      {/* Analytics & Priority Requisitions Grid */}
+      {/* Analytics & Priority Requisitions Grid - Restored to Previous Funnel layout setup */}
       <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         {/* Hiring Funnel Card */}
         <div className="rounded-2xl border border-stone-200/60 bg-white p-6 flex flex-col justify-between shadow-sm">
           <div className="mb-4 flex items-start justify-between border-b border-[#ECE8E2] pb-4">
             <div>
-              <h2
-                className="text-[20px] font-bold text-brand-navy"
-                style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}
-              >
+              <h2 className="text-[20px] font-bold text-brand-navy" style={labelFontStyle}>
                 Hiring Funnel
               </h2>
               <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Standard candidate conversion funnel.</p>
@@ -149,18 +155,17 @@ export default function DashboardPage() {
               <span className="text-[9px] text-[#6D6B8D] font-sans mt-0.5 block">{candidates.filter(c => c.status === 'Hired').length} candidates hired</span>
             </div>
           </div>
- 
+
           <div className="w-full">
             <HiringFunnelChart candidates={candidates} />
           </div>
         </div>
- 
-        {/* Priority Requisitions Card */}
+
+        {/* Priority Requisitions Card - Original Version Restored */}
         <div className="rounded-2xl border border-stone-200/60 bg-white p-6 shadow-sm flex flex-col justify-between">
           <div>
             <div className="mb-4 border-b border-[#ECE8E2] pb-4">
-              <h2 className="text-[20px] font-bold text-brand-navy" 
-              style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>Priority Requisitions</h2>
+              <h2 className="text-[20px] font-bold text-brand-navy" style={labelFontStyle}>Priority Requisitions</h2>
               <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Open roles requiring immediate sourcing.</p>
             </div>
             <div className="space-y-3.5">
@@ -205,8 +210,7 @@ export default function DashboardPage() {
         {/* Left: Recent Candidate Movement Table */}
         <div className="rounded-2xl border border-stone-200/60 bg-white p-6 shadow-sm overflow-hidden">
           <div className="mb-4 border-b border-[#ECE8E2] pb-4">
-            <h2 className="text-[20px] font-bold text-brand-navy"
-                style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>Recent Candidate Movement</h2>
+            <h2 className="text-[20px] font-bold text-brand-navy" style={labelFontStyle}>Recent Candidate Movement</h2>
             <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Latest transitions in candidate evaluation status.</p>
           </div>
           <div className="overflow-x-auto -mx-6">
@@ -247,31 +251,35 @@ export default function DashboardPage() {
           <div>
             <div className="mb-4 border-b border-[#ECE8E2] pb-4 flex items-center justify-between">
               <div>
-                <h2 className="text-[20px] font-bold text-brand-navy"
-                style={{ fontFamily: '"DM Sans", system-ui, sans-serif' }}>Top Matches</h2>
+                <h2 className="text-[20px] font-bold text-brand-navy" style={labelFontStyle}>Top Matches</h2>
                 <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Best fitting profiles in pool.</p>
               </div>
             </div>
             <div className="space-y-3.5">
-              {topMatchedCandidates.map((candidate) => (
+              {topMatchedCandidates.map((candidate, idx) => (
                 <div 
                   key={candidate.id} 
                   className="rounded-xl border border-[#ECE8E2] bg-white p-3.5 hover:border-brand-purple hover:translate-y-[-1px] transition-all duration-200 shadow-sm cursor-pointer"
                   onClick={() => navigate('/pipeline')}
                 >
-                  <div className="flex items-start justify-between gap-2.5">
-                    <div>
-                      <h4 className="font-sans font-bold text-brand-navy text-[13px] leading-tight">{candidate.name}</h4>
-                      <p className="text-[10px] text-[#6D6B8D] mt-0.5 font-sans">{candidate.jobTitle}</p>
+                  <div className="flex items-center justify-between gap-2.5">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-5 h-5 flex items-center justify-center rounded-full bg-brand-purple/10 text-brand-purple font-mono text-[10px] font-bold">
+                        {idx + 1}
+                      </span>
+                      <div>
+                        <h4 className="font-sans font-bold text-brand-navy text-[13px] leading-tight">{candidate.name}</h4>
+                        <p className="text-[10px] text-[#6D6B8D] mt-0.5 font-sans">{candidate.jobTitle}</p>
+                      </div>
                     </div>
-                    <span className="folio-mono text-[9px] font-bold text-brand-purple bg-brand-purple/5 px-2 py-0.5 rounded border border-brand-purple/10 flex-shrink-0">
+                    <span className="folio-mono text-[9px] font-bold text-brand-mint bg-brand-mint/5 px-2 py-0.5 rounded border border-brand-mint/10 flex-shrink-0">
                       {candidate.matchScore}%
                     </span>
                   </div>
 
                   {/* Skills tags */}
                   {candidate.skills && candidate.skills.length > 0 && (
-                    <div className="mt-2.5 flex flex-wrap gap-1">
+                    <div className="mt-2.5 flex flex-wrap gap-1 ml-7">
                       {candidate.skills.slice(0, 2).map((skill, idx) => (
                         <span key={idx} className="text-[8.5px] font-mono text-stone-500 bg-stone-50 border border-stone-200/60 px-1.5 py-0.5 rounded">
                           {skill}
@@ -282,7 +290,7 @@ export default function DashboardPage() {
 
                   {/* AI Recommendation tag */}
                   {candidate.matchScore >= 85 && (
-                    <div className="mt-2.5 inline-flex items-center gap-1 rounded bg-brand-purple/5 border border-brand-purple/10 px-1.5 py-0.5">
+                    <div className="mt-2.5 ml-7 inline-flex items-center gap-1 rounded bg-brand-purple/5 border border-brand-purple/10 px-1.5 py-0.5">
                       <span className="h-1 w-1 rounded-full bg-brand-purple animate-ping" />
                       <span className="folio-mono text-[6.5px] uppercase tracking-wider text-brand-purple font-bold">
                         AI RECOMMEND

@@ -31,16 +31,16 @@ const initialForm: JobForm = {
   experienceLevel: 'Mid-level',
   keywords: [],
   certifications: '',
+  company: '',
   requirementsWeights: {
     Creativity: 20,
     Leadership: 20,
     Teamwork: 20,
     Communication: 20,
     'Problem Solving': 20,
+    Adaptability: 20,
   },
 };
-
-const skillsList = ['Creativity', 'Leadership', 'Teamwork', 'Communication', 'Problem Solving'];
 
 const titleSuggestionsMap: Record<string, string[]> = {
   developer: ['Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'React Developer'],
@@ -72,7 +72,7 @@ const normalizeSkills = (input: string): string[] => {
 };
 
 const getTopWeights = (weightsRecord?: Record<string, number>) => {
-  const defaultWeights = { Creativity: 20, Leadership: 20, Teamwork: 20, Communication: 20, 'Problem Solving': 20 };
+  const defaultWeights = { Creativity: 20, Leadership: 20, Teamwork: 20, Communication: 20, 'Problem Solving': 20, Adaptability: 20 };
   const w = (weightsRecord && typeof weightsRecord === 'object') ? weightsRecord : defaultWeights;
   return Object.entries(w)
     .filter(([_, val]) => val > 0)
@@ -110,84 +110,62 @@ const getAIInsights = (job: Job) => {
   return insights;
 };
 
-const analyzeJD = (
-  desc: string,
-  skillsText: string,
-  salaryRange: string,
-  experienceLevel: string,
-  certifications: string,
-  title: string,
-  keywordsText: string
-) => {
+const analyzeJD = (desc: string, skillsText: string) => {
   const suggestions: string[] = [];
-  let score = 100;
-
   const trimmedDesc = desc.trim();
+  const lowerDesc = trimmedDesc.toLowerCase();
+  
+  let score = 100;
+  
+  // 1. Description length
   if (trimmedDesc.length === 0) {
-    score -= 30;
-    suggestions.push('Job description is empty. Please add candidate responsibilities.');
-  } else if (trimmedDesc.length < 150) {
-    score -= 20;
-    suggestions.push('Job description is too short (min 150 chars).');
-  } else if (trimmedDesc.length < 300) {
+    score -= 40;
+    suggestions.push('Job description is empty. Please describe candidate responsibilities.');
+  } else if (trimmedDesc.length < 100) {
+    score -= 25;
+    suggestions.push('Job description is too short (min 100 characters).');
+  } else if (trimmedDesc.length < 250) {
     score -= 10;
-    suggestions.push('Extend the job description to explain candidate responsibilities (min 300 chars).');
+    suggestions.push('Describe responsibilities clearly by expanding the job description details.');
   }
-
+  
+  // 2. Presence of required skills
   const skillsCount = skillsText.split(',').map((s) => s.trim()).filter(Boolean).length;
   if (skillsCount === 0) {
+    score -= 20;
+    suggestions.push('Add more technical skills to target qualified applicants.');
+  }
+  
+  // 3. Generic placeholder text
+  const placeholders = ['lorem ipsum', 'insert description', 'placeholder', 'responsibilities go here', 'add details'];
+  if (placeholders.some(p => lowerDesc.includes(p))) {
+    score -= 20;
+    suggestions.push('Avoid generic descriptions and placeholder text.');
+  }
+  
+  // 4. Missing responsibilities
+  if (!lowerDesc.includes('responsibilit') && !lowerDesc.includes('role') && !lowerDesc.includes('duty') && !lowerDesc.includes('work')) {
     score -= 15;
-    suggestions.push('Add required skills to target qualified applicants.');
-  } else if (skillsCount < 3) {
-    score -= 10;
-    suggestions.push('Specify at least 3 required skills/tools for better matching.');
+    suggestions.push('Mention candidate responsibilities clearly.');
   }
-
-  const keywordsCount = keywordsText.split(',').map((k) => k.trim()).filter(Boolean).length;
-  if (keywordsCount === 0) {
-    score -= 10;
-    suggestions.push('Incorporate industry-standard keywords to increase searchability.');
-  }
-
-  if (!salaryRange.trim()) {
-    score -= 10;
-    suggestions.push('Specify a salary range to increase applicant response rate.');
-  }
-  if (!experienceLevel) {
-    score -= 10;
-    suggestions.push('Specify a target experience level.');
-  }
-  if (!certifications.trim()) {
-    score -= 5;
-    suggestions.push('Mention target certifications if applicable.');
-  }
-
-  const genericTitles = ['developer', 'engineer', 'designer', 'analyst', 'manager', 'lead', 'intern', 'consultant'];
-  if (genericTitles.includes(title.trim().toLowerCase())) {
+  
+  // 5. Missing qualifications / education
+  if (!lowerDesc.includes('qualification') && !lowerDesc.includes('degree') && !lowerDesc.includes('education') && !lowerDesc.includes('requirement')) {
     score -= 15;
-    suggestions.push("Avoid generic titles. Be specific (e.g., 'React Developer' instead of 'Developer').");
+    suggestions.push('Add qualification or education details.');
   }
 
-  const words = trimmedDesc.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
-  const wordCounts: Record<string, number> = {};
-  words.forEach((w) => {
-    wordCounts[w] = (wordCounts[w] || 0) + 1;
-  });
-  const repeated = Object.entries(wordCounts).filter(([_, count]) => count > 5);
-  if (repeated.length > 0) {
+  // 6. Experience requirements
+  if (!lowerDesc.includes('experience') && !lowerDesc.includes('years')) {
     score -= 10;
-    const wordList = repeated.slice(0, 3).map(([w]) => `"${w}"`).join(', ');
-    suggestions.push(`Reduce word repetition for words like ${wordList} to improve description quality.`);
+    suggestions.push('Mention experience requirements.');
   }
 
-  score = Math.max(0, Math.min(100, score));
-
-  let rating: 'Excellent' | 'Good' | 'Average' | 'Poor' = 'Poor';
-  if (score >= 85) rating = 'Excellent';
-  else if (score >= 70) rating = 'Good';
+  let rating: 'Good' | 'Average' | 'Poor' = 'Poor';
+  if (score >= 80) rating = 'Good';
   else if (score >= 50) rating = 'Average';
 
-  return { score, rating, suggestions };
+  return { rating, suggestions };
 };
 
 export default function JobsPage() {
@@ -201,11 +179,13 @@ export default function JobsPage() {
     Leadership: 20,
     Teamwork: 20,
     Communication: 20,
-    'Problem Solving': 20
+    'Problem Solving': 20,
+    Adaptability: 20
   });
+  const [customReqName, setCustomReqName] = useState('');
+  const [customReqError, setCustomReqError] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
-  const [showRequirements, setShowRequirements] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [viewMode, setViewMode] = useState<'create' | 'directory'>('create');
 
@@ -222,6 +202,7 @@ export default function JobsPage() {
         job.hiringManager || '',
         job.salaryRange || '',
         job.certifications || '',
+        job.company || '',
         ...(Array.isArray(job.keywords) ? job.keywords : []),
         ...(Array.isArray(job.requiredSkills) ? job.requiredSkills : [])
       ].map((f) => (f || '').toLowerCase());
@@ -235,6 +216,61 @@ export default function JobsPage() {
       ...current,
       [changedSkill]: newValue,
     }));
+  };
+
+  const handleChange = (field: keyof JobForm, value: any) => {
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
+  const handleSkillsChange = (val: string) => {
+    setSkillsInput(val);
+    if (errors.skills) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.skills;
+        return next;
+      });
+    }
+  };
+
+  const handleAddCustomRequirement = () => {
+    const trimmed = customReqName.trim();
+    if (!trimmed) {
+      setCustomReqError('Requirement name cannot be empty.');
+      return;
+    }
+    const duplicate = Object.keys(weights).some(
+      (key) => key.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (duplicate) {
+      setCustomReqError('Requirement already exists.');
+      return;
+    }
+    
+    setWeights((prev) => ({
+      ...prev,
+      [trimmed]: 50,
+    }));
+    setCustomReqName('');
+    setCustomReqError('');
+  };
+
+  const handleRemoveRequirement = (name: string) => {
+    setWeights((prev) => {
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
   };
 
   const detectMismatch = (title: string, dept: string, desc: string) => {
@@ -285,15 +321,44 @@ export default function JobsPage() {
     );
   }, [form.title, form.department, form.location, jobs]);
 
-  const getCurrentErrors = (f: JobForm) => {
+  const getCurrentErrors = (f: JobForm, sInput: string) => {
     const now = new Date().toISOString().slice(0, 10);
     const next: Record<string, string> = {};
 
-    // Validate only fields that are actually present in the UI
-    if (!f.title.trim()) next.title = 'Job Title is required.';
-    if (!f.hiringManager.trim()) next.hiringManager = 'Hiring Manager is required.';
-    if (!f.location.trim()) next.location = 'Location is required.';
-    if (f.targetDate < now) next.targetDate = 'Target Date cannot be in the past.';
+    if (!f.title.trim()) {
+      next.title = 'Job Title is required.';
+    }
+    if (!f.company?.trim()) {
+      next.company = 'Company is required.';
+    }
+    if (!f.location.trim()) {
+      next.location = 'Location is required.';
+    }
+    if (!f.type.trim()) {
+      next.type = 'Employment type is required.';
+    }
+    if (!f.experienceLevel?.trim()) {
+      next.experienceLevel = 'Experience level is required.';
+    }
+    
+    const cleanedSkills = cleanCommaString(sInput);
+    if (cleanedSkills.length === 0) {
+      next.skills = 'At least one required skill is required.';
+    }
+
+    const trimmedDesc = f.description.trim();
+    if (!trimmedDesc) {
+      next.description = 'Job Description is required.';
+    } else if (trimmedDesc.length < 50) {
+      next.description = `Job Description is too short (current: ${trimmedDesc.length} chars, minimum: 50 chars).`;
+    }
+
+    if (!f.hiringManager.trim()) {
+      next.hiringManager = 'Hiring Manager is required.';
+    }
+    if (f.targetDate < now) {
+      next.targetDate = 'Target Date cannot be in the past.';
+    }
 
     return next;
   };
@@ -301,7 +366,7 @@ export default function JobsPage() {
   const createJob = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const newErrors = getCurrentErrors(form);
+    const newErrors = getCurrentErrors(form, skillsInput);
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -348,6 +413,7 @@ export default function JobsPage() {
       Teamwork: 20,
       Communication: 20,
       'Problem Solving': 20,
+      Adaptability: 20,
     });
     setIsSaving(false);
   };
@@ -355,19 +421,10 @@ export default function JobsPage() {
   const mismatch = detectMismatch(form.title, form.department, form.description);
   
   const jdAnalysis = useMemo(() => {
-    return analyzeJD(
-      form.description,
-      skillsInput,
-      form.salaryRange || '',
-      form.experienceLevel || '',
-      form.certifications || '',
-      form.title,
-      keywordsInput
-    );
-  }, [form.description, skillsInput, form.salaryRange, form.experienceLevel, form.certifications, form.title, keywordsInput]);
+    return analyzeJD(form.description, skillsInput);
+  }, [form.description, skillsInput]);
 
   const ratingColors = {
-    Excellent: 'text-brand-mint bg-brand-mint/5 border-brand-mint/15',
     Good: 'text-brand-mint bg-brand-mint/5 border-brand-mint/15',
     Average: 'text-brand-purple bg-brand-purple/5 border-brand-purple/15',
     Poor: 'text-brand-orange bg-brand-orange/5 border-brand-orange/20',
@@ -454,7 +511,7 @@ export default function JobsPage() {
                 <input 
                   className={`input w-full ${errors.title ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`}
                   value={form.title} 
-                  onChange={(event) => setForm({ ...form, title: event.target.value })} 
+                  onChange={(event) => handleChange('title', event.target.value)} 
                   placeholder="Senior React Engineer" 
                 />
                 {errors.title && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.title}</p>}
@@ -466,7 +523,7 @@ export default function JobsPage() {
                       <button
                         key={sug}
                         type="button"
-                        onClick={() => setForm({ ...form, title: sug })}
+                        onClick={() => handleChange('title', sug)}
                         className="text-[9.5px] text-[#5B4FE9] bg-[#5B4FE9]/5 border border-[#5B4FE9]/10 px-2 py-0.5 rounded-full hover:bg-[#5B4FE9]/10 transition duration-200 cursor-pointer"
                         style={labelFontStyle}
                       >
@@ -477,36 +534,122 @@ export default function JobsPage() {
                 )}
               </div>
               
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div>
+                  <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Company</label>
+                  <input 
+                    className={`input w-full ${errors.company ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`} 
+                    value={form.company || ''} 
+                    onChange={(event) => handleChange('company', event.target.value)} 
+                    placeholder="e.g. Razorpay"
+                  />
+                  {errors.company && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.company}</p>}
+                </div>
                 <div>
                   <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Department</label>
                   <input 
                     className="input w-full" 
                     value={form.department} 
-                    onChange={(event) => setForm({ ...form, department: event.target.value })} 
-                    required
+                    onChange={(event) => handleChange('department', event.target.value)} 
                   />
                 </div>
                 <div>
                   <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Location</label>
                   <input 
-                    className="input w-full" 
+                    className={`input w-full ${errors.location ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`} 
                     value={form.location} 
-                    onChange={(event) => setForm({ ...form, location: event.target.value })} 
-                    required
+                    onChange={(event) => handleChange('location', event.target.value)} 
                   />
+                  {errors.location && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.location}</p>}
                 </div>
               </div>
 
-              <div>
-                <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Requirements</label>
-                <button
-                  type="button"
-                  onClick={() => setShowRequirements(true)}
-                  className="w-full rounded-xl border border-brand-purple/20 bg-brand-purple/5 px-4 py-3 text-sm font-semibold text-brand-purple hover:bg-brand-purple/10 transition cursor-pointer"
-                >
-                  Configure Requirements
-                </button>
+              {/* Hiring Requirements directly in the Job Creation form */}
+              <div className="rounded-xl border border-[#ECE8E2] bg-[#FAF9F7]/60 p-5 space-y-4">
+                <div>
+                  <h3 className="text-sm font-bold text-brand-navy" style={labelFontStyle}>Hiring Requirements</h3>
+                  <p className="text-[10px] text-[#6D6B8D] uppercase tracking-wider font-semibold mt-0.5">Define weights for applicant matching.</p>
+                </div>
+                
+                <div className="space-y-4 pt-2">
+                  {Object.entries(weights).map(([skill, val]) => (
+                    <div key={skill} className="bg-white border border-[#ECE8E2] p-4 rounded-xl shadow-xs">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-bold text-brand-navy" style={labelFontStyle}>{skill}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-mono font-bold text-brand-purple">{val}%</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveRequirement(skill)}
+                            className="text-[10px] text-rose-500 hover:text-rose-700 font-bold transition cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleSliderChange(skill, Math.max(0, val - 5))}
+                          className="h-7 w-7 rounded-full border border-stone-200 flex items-center justify-center hover:bg-stone-50 font-bold text-xs"
+                        >
+                          -
+                        </button>
+                        <div className="relative flex-1">
+                          <div className="h-1.5 w-full rounded-full bg-gray-200">
+                            <div className="h-1.5 rounded-full bg-brand-purple" style={{ width: `${val}%` }} />
+                          </div>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={val}
+                            onChange={(e) => handleSliderChange(skill, Number(e.target.value))}
+                            className="absolute inset-0 w-full opacity-0 cursor-pointer"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleSliderChange(skill, Math.min(100, val + 5))}
+                          className="h-7 w-7 rounded-full border border-stone-200 flex items-center justify-center hover:bg-stone-50 font-bold text-xs"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add Custom Requirement Field */}
+                <div className="pt-3 border-t border-[#ECE8E2] flex flex-col gap-2">
+                  <label className="block text-[10px] font-mono tracking-widest text-[#6D6B8D] uppercase font-bold" style={labelFontStyle}>
+                    Add Custom Requirement
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={customReqName}
+                      onChange={(e) => {
+                        setCustomReqName(e.target.value);
+                        setCustomReqError('');
+                      }}
+                      placeholder="e.g. Adaptability"
+                      className="input flex-1 text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddCustomRequirement}
+                      className="bg-brand-navy hover:bg-brand-navy/90 text-white px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer"
+                      style={labelFontStyle}
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {customReqError && (
+                    <p className="text-[10px] text-rose-500 font-medium font-sans">{customReqError}</p>
+                  )}
+                </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -515,7 +658,7 @@ export default function JobsPage() {
                   <input 
                     className={`input w-full ${errors.hiringManager ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`}
                     value={form.hiringManager} 
-                    onChange={(event) => setForm({ ...form, hiringManager: event.target.value })} 
+                    onChange={(event) => handleChange('hiringManager', event.target.value)} 
                     placeholder="Manager name" 
                   />
                   {errors.hiringManager && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.hiringManager}</p>}
@@ -524,15 +667,17 @@ export default function JobsPage() {
                 <div>
                   <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Experience Level</label>
                   <select 
-                    className="input w-full cursor-pointer font-sans"
+                    className={`input w-full cursor-pointer font-sans ${errors.experienceLevel ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`}
                     value={form.experienceLevel} 
-                    onChange={(event) => setForm({ ...form, experienceLevel: event.target.value as Job['experienceLevel'] })}
+                    onChange={(event) => handleChange('experienceLevel', event.target.value as Job['experienceLevel'])}
                   >
+                    <option value="">Select Level</option>
                     <option value="Junior">Junior</option>
                     <option value="Mid-level">Mid-level</option>
                     <option value="Senior">Senior</option>
                     <option value="Lead">Lead</option>
                   </select>
+                  {errors.experienceLevel && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.experienceLevel}</p>}
                 </div>
               </div>
 
@@ -542,7 +687,7 @@ export default function JobsPage() {
                   <input 
                     className="input w-full" 
                     value={form.salaryRange} 
-                    onChange={(event) => setForm({ ...form, salaryRange: event.target.value })} 
+                    onChange={(event) => handleChange('salaryRange', event.target.value)} 
                     placeholder="e.g. $80,000 - $110,000" 
                   />
                 </div>
@@ -552,7 +697,7 @@ export default function JobsPage() {
                   <input 
                     className="input w-full" 
                     value={form.certifications} 
-                    onChange={(event) => setForm({ ...form, certifications: event.target.value })} 
+                    onChange={(event) => handleChange('certifications', event.target.value)} 
                     placeholder="e.g. AWS Solutions Architect" 
                   />
                 </div>
@@ -562,11 +707,12 @@ export default function JobsPage() {
                 <div>
                   <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Required Skills (Comma-separated)</label>
                   <input 
-                    className="input w-full" 
+                    className={`input w-full ${errors.skills ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`} 
                     value={skillsInput} 
-                    onChange={(event) => setSkillsInput(event.target.value)} 
+                    onChange={(event) => handleSkillsChange(event.target.value)} 
                     placeholder="React, TypeScript, CSS" 
                   />
+                  {errors.skills && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.skills}</p>}
                 </div>
 
                 <div>
@@ -584,21 +730,23 @@ export default function JobsPage() {
                 <div>
                   <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Type</label>
                   <select 
-                    className="input w-full cursor-pointer" 
+                    className={`input w-full cursor-pointer ${errors.type ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`} 
                     value={form.type} 
-                    onChange={(event) => setForm({ ...form, type: event.target.value as Job['type'] })}
+                    onChange={(event) => handleChange('type', event.target.value as Job['type'])}
                   >
-                    <option>Full-time</option>
-                    <option>Internship</option>
-                    <option>Contract</option>
+                    <option value="">Select Type</option>
+                    <option value="Full-time">Full-time</option>
+                    <option value="Internship">Internship</option>
+                    <option value="Contract">Contract</option>
                   </select>
+                  {errors.type && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.type}</p>}
                 </div>
                 <div>
                   <label className="block folio-meta text-[#6D6B8D] mb-1.5 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Priority</label>
                   <select 
                     className="input w-full cursor-pointer" 
                     value={form.priority} 
-                    onChange={(event) => setForm({ ...form, priority: event.target.value as Job['priority'] })}
+                    onChange={(event) => handleChange('priority', event.target.value as Job['priority'])}
                   >
                     <option>Critical</option>
                     <option>High</option>
@@ -611,7 +759,7 @@ export default function JobsPage() {
                     className={`input w-full cursor-pointer ${errors.targetDate ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`}
                     type="date" 
                     value={form.targetDate} 
-                    onChange={(event) => setForm({ ...form, targetDate: event.target.value })} 
+                    onChange={(event) => handleChange('targetDate', event.target.value)} 
                   />
                   {errors.targetDate && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.targetDate}</p>}
                 </div>
@@ -620,35 +768,37 @@ export default function JobsPage() {
               <div>
                 <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Description</label>
                 <textarea 
-                  className="input w-full min-h-24 resize-none font-sans" 
+                  className={`input w-full min-h-24 resize-none font-sans ${errors.description ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/10' : ''}`} 
                   value={form.description} 
-                  onChange={(event) => setForm({ ...form, description: event.target.value })} 
+                  onChange={(event) => handleChange('description', event.target.value)} 
                   placeholder="Job description parameters..."
                 />
+                {errors.description && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.description}</p>}
               </div>
 
-              {form.description.length > 0 && (
-                <div className="rounded-xl border border-[#ECE8E2] bg-white p-4 shadow-sm text-xs">
-                  <div className="flex items-center justify-between border-b border-[#ECE8E2] pb-2 mb-2">
-                    <span className="folio-mono text-[9px] uppercase tracking-wider text-stone-500 font-bold flex items-center gap-1">
-                      <Sparkles className="h-3 w-3 text-brand-purple" />
-                      JD Quality Analysis ({jdAnalysis.score}%)
-                    </span>
-                    <span className={`folio-mono text-[9.5px] font-bold uppercase tracking-wider border px-2 py-0.5 rounded ${ratingColors[jdAnalysis.rating]}`}>
-                      {jdAnalysis.rating} Quality
-                    </span>
-                  </div>
-                  {jdAnalysis.suggestions.length > 0 ? (
-                    <ul className="space-y-1.5 text-stone-500 list-disc pl-4 text-[10.5px]">
-                      {jdAnalysis.suggestions.map((sug, idx) => (
-                        <li key={idx} className="leading-snug">{sug}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-brand-mint font-semibold text-[10.5px]">✓ Content meets standard guidelines for discovery indexing.</p>
-                  )}
+              {/* JD Quality Analysis indicator in real time */}
+              <div className="rounded-xl border border-[#ECE8E2] bg-white p-4 shadow-sm text-xs">
+                <div className="flex items-center justify-between border-b border-[#ECE8E2] pb-2 mb-2">
+                  <span className="folio-mono text-[9px] uppercase tracking-wider text-stone-500 font-bold flex items-center gap-1">
+                    <Sparkles className="h-3 w-3 text-brand-purple" />
+                    JD Quality Analysis
+                  </span>
+                  <span className="flex items-center gap-1.5 font-bold">
+                    {jdAnalysis.rating === 'Good' && <span className="text-brand-mint">🟢 Good</span>}
+                    {jdAnalysis.rating === 'Average' && <span className="text-brand-purple">🟡 Average</span>}
+                    {jdAnalysis.rating === 'Poor' && <span className="text-brand-orange">🔴 Poor</span>}
+                  </span>
                 </div>
-              )}
+                {jdAnalysis.suggestions.length > 0 ? (
+                  <ul className="space-y-1.5 text-stone-500 list-disc pl-4 text-[10.5px]">
+                    {jdAnalysis.suggestions.map((sug, idx) => (
+                      <li key={idx} className="leading-snug">{sug}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-brand-mint font-semibold text-[10.5px]">✓ Content meets standard guidelines for discovery indexing.</p>
+                )}
+              </div>
 
               <button 
                 className="button-primary w-full py-4 mt-4 flex items-center justify-center font-bold hover:bg-brand-orange transition duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" 
@@ -704,12 +854,7 @@ export default function JobsPage() {
                 filteredJobs.map((job) => {
                   const scoreDetails = analyzeJD(
                     job.description || '',
-                    (Array.isArray(job.requiredSkills) ? job.requiredSkills : []).join(','),
-                    job.salaryRange || '',
-                    job.experienceLevel || '',
-                    job.certifications || '',
-                    job.title || '',
-                    (Array.isArray(job.keywords) ? job.keywords : []).join(',')
+                    (Array.isArray(job.requiredSkills) ? job.requiredSkills : []).join(',')
                   );
                   
                   const topWeights = getTopWeights(job.requirementsWeights);
@@ -731,7 +876,7 @@ export default function JobsPage() {
                               <StatusBadge value={job.status} />
                               <StatusBadge value={job.priority} />
                               <span className={`text-[9.5px] font-mono font-bold uppercase tracking-wider border px-2 py-0.5 rounded-full ${ratingColors[scoreDetails.rating]}`}>
-                                JD: {scoreDetails.score}%
+                                JD: {scoreDetails.rating} Quality
                               </span>
                             </div>
                           </div>
@@ -761,6 +906,7 @@ export default function JobsPage() {
 
                       {/* Metadata Instrument Matrix Grid */}
                       <div className="grid gap-4 grid-cols-2 sm:grid-cols-4 md:grid-cols-5 pt-4 w-full">
+                        <Field label="Company" value={job.company || 'Razorpay'} />
                         <Field label="Department" value={job.department} />
                         <Field label="Location" value={job.location} />
                         <Field label="Applicants" value={job.applicantsCount?.toString() || '0'} isMono={true} />
@@ -831,73 +977,6 @@ export default function JobsPage() {
           </div>
         )}
       </div>
-
-      {/* Modal Requirements Slider Window */}
-      {showRequirements && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="w-[700px] max-h-[85vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
-            <h2 className="text-xl font-bold mb-6" style={labelFontStyle}>Requirements Builder</h2>
-            {skillsList.map((skill) => (
-              <div key={skill} className="mb-5">
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-semibold" style={labelFontStyle}>{skill}</span>
-                  <span className="text-sm font-mono">{weights[skill]}%</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => handleSliderChange(skill, Math.max(0, weights[skill] - 5))}
-                    className="h-8 w-8 rounded-full border border-stone-200 flex items-center justify-center hover:bg-stone-50 font-bold"
-                  >
-                    -
-                  </button>
-                  <div className="relative flex-1">
-                    <div className="h-2 w-full rounded-full bg-gray-200">
-                      <div className="h-2 rounded-full bg-brand-purple" style={{ width: `${weights[skill]}%` }} />
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={weights[skill]}
-                      onChange={(e) => handleSliderChange(skill, Number(e.target.value))}
-                      className="absolute inset-0 w-full opacity-0 cursor-pointer"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleSliderChange(skill, Math.min(100, weights[skill] + 5))}
-                    className="h-8 w-8 rounded-full border border-stone-200 flex items-center justify-center hover:bg-stone-50 font-bold"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            ))}
-            <div className="mt-8 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowRequirements(false)}
-                className="rounded-lg border px-4 py-2 text-sm font-semibold cursor-pointer hover:bg-stone-50"
-                style={labelFontStyle}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setForm({ ...form, requirementsWeights: weights });
-                  setShowRequirements(false);
-                }}
-                className="rounded-lg bg-brand-purple px-5 py-2 text-white text-sm font-semibold cursor-pointer hover:opacity-90"
-                style={labelFontStyle}
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

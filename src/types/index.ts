@@ -37,6 +37,7 @@ export interface Job {
   createdAt: string;
   hiringManager: string;
   priority: 'Critical' | 'High' | 'Medium';
+  company?: string;
 
   experienceRequired: 'Fresher' | '0-1 years' | '1-3 years' | '3-5 years' | '5-7 years' | '7+ years';
   salaryRange: string;

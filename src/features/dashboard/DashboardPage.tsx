@@ -1,7 +1,6 @@
-import { Activity, BriefcaseBusiness, CalendarClock, CheckCircle2, UsersRound, Send, ArrowUpRight, Plus, Layers } from 'lucide-react';
+import { BriefcaseBusiness, CalendarClock, CheckCircle2, UsersRound, Send, ArrowUpRight, Plus, Layers } from 'lucide-react';
 import { ElementType, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import HiringFunnelChart from '@/components/charts/HiringFunnelChart';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useCollection } from '@/hooks/useCollection';
 import { useAuth } from '@/contexts/useAuth';
@@ -33,7 +32,7 @@ export default function DashboardPage() {
   // Top matches sorting
   const topMatchedCandidates = [...candidates]
     .sort((a, b) => b.matchScore - a.matchScore)
-    .slice(0, 5);
+    .slice(0, 6);
 
   const labelFontStyle = { fontFamily: '"DM Sans", system-ui, sans-serif' };
 
@@ -174,45 +173,50 @@ export default function DashboardPage() {
         />
       </section>
 
-      {/* Analytics & Priority Requisitions Grid */}
+      {/* Optimized Main Content Sections Grid */}
       <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-        {/* Hiring Funnel Card */}
-        <div className="rounded-2xl border border-stone-200/60 bg-white p-6 flex flex-col justify-between shadow-sm">
-          <div className="mb-4 flex items-start justify-between border-b border-[#ECE8E2] pb-4">
-            <div>
-              <h2 className="text-[20px] font-bold text-brand-navy" style={labelFontStyle}>
-                Hiring Funnel
-              </h2>
-              <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Standard candidate conversion funnel.</p>
+        {/* Left: Recent Candidate Movement Table */}
+        <div className="rounded-2xl border border-stone-200/60 bg-white p-6 shadow-sm overflow-hidden flex flex-col justify-between">
+          <div>
+            <div className="mb-4 border-b border-[#ECE8E2] pb-4">
+              <h2 className="text-[20px] font-bold text-brand-navy" style={labelFontStyle}>Recent Candidate Movement</h2>
+              <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Latest transitions in candidate evaluation status.</p>
             </div>
-            <Activity className="h-4.5 w-4.5 text-[#6D6B8D]" strokeWidth={1.5} />
-          </div>
-          
-          {/* Summary Stats Bar */}
-          <div className="grid grid-cols-3 gap-4 mb-4 border-b border-[#ECE8E2] pb-4 text-xs">
-            <div>
-              <span className="folio-label text-[8px] uppercase tracking-[0.12em] text-[#6D6B8D] font-bold block mb-0.5">Top Stage</span>
-              <span className="folio-mono font-bold text-brand-navy text-xs block">Applied</span>
-              <span className="text-[9px] text-[#6D6B8D] font-sans mt-0.5 block">{candidates.filter(c => c.status === 'Applied').length} candidates</span>
+            <div className="overflow-x-auto -mx-6">
+              <div className="inline-block min-w-full align-middle px-6">
+                <table className="w-full min-w-[500px] text-left text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b border-[#ECE8E2] pb-2">
+                      <th className="folio-label text-[9px] uppercase tracking-[0.18em] text-[#6D6B8D] pb-2 font-bold">Candidate</th>
+                      <th className="folio-label text-[9px] uppercase tracking-[0.18em] text-[#6D6B8D] pb-2 font-bold">Role</th>
+                      <th className="folio-label text-[9px] uppercase tracking-[0.18em] text-[#6D6B8D] pb-2 font-bold">Source</th>
+                      <th className="folio-label text-[9px] uppercase tracking-[0.18em] text-[#6D6B8D] pb-2 font-bold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#ECE8E2]">
+                    {candidates.slice(0, 5).map((candidate) => (
+                      <tr key={candidate.id} className="hover:bg-[#151633]/[0.02] transition-colors cursor-pointer" onClick={() => navigate('/pipeline')}>
+                        <td className="py-2.5 font-sans font-bold text-brand-navy text-[13.5px]">
+                          <div className="flex items-center gap-2.5">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-navy text-white text-[10px] font-sans font-bold flex-shrink-0">
+                              {candidate.name.charAt(0)}
+                            </div>
+                            <span>{candidate.name}</span>
+                          </div>
+                        </td>
+                        <td className="py-2.5 text-[#6D6B8D]/90 font-sans text-[12.5px]">{candidate.jobTitle}</td>
+                        <td className="py-2.5 text-[#6D6B8D]/90 font-sans text-[12.5px]">{candidate.source}</td>
+                        <td className="py-2.5"><StatusBadge value={candidate.status} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div>
-              <span className="folio-label text-[8px] uppercase tracking-[0.12em] text-[#6D6B8D] font-bold block mb-0.5">Bottleneck Stage</span>
-              <span className="folio-mono font-bold text-brand-orange text-xs block">Interviewing</span>
-              <span className="text-[9px] text-[#6D6B8D] font-sans mt-0.5 block">{candidates.filter(c => c.status === 'Interviewing').length} candidates</span>
-            </div>
-            <div>
-              <span className="folio-label text-[8px] uppercase tracking-[0.12em] text-[#6D6B8D] font-bold block mb-0.5">Conversion Ratio</span>
-              <span className="folio-mono font-bold text-brand-mint text-xs block">Dynamic Hired</span>
-              <span className="text-[9px] text-[#6D6B8D] font-sans mt-0.5 block">{candidates.filter(c => c.status === 'Hired').length} candidates hired</span>
-            </div>
-          </div>
-
-          <div className="w-full">
-            <HiringFunnelChart candidates={candidates} />
           </div>
         </div>
 
-        {/* Right Column: Profile completion (if recruiter) and Priority Requisitions */}
+        {/* Right: Column containing Profile Completion (if Recruiter) and Priority Requisitions */}
         <div className="space-y-6 flex flex-col justify-start">
           {user?.role === 'Recruiter' && (
             <div className="rounded-2xl border border-stone-200/60 bg-white p-6 shadow-sm flex flex-col justify-between">
@@ -316,110 +320,65 @@ export default function DashboardPage() {
         </div>
       </section>
  
-      {/* Candidate Activity & Match Analytics Section Grid */}
-      <section className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-        
-        {/* Left: Recent Candidate Movement Table */}
-        <div className="rounded-2xl border border-stone-200/60 bg-white p-6 shadow-sm overflow-hidden">
-          <div className="mb-4 border-b border-[#ECE8E2] pb-4">
-            <h2 className="text-[20px] font-bold text-brand-navy" style={labelFontStyle}>Recent Candidate Movement</h2>
-            <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Latest transitions in candidate evaluation status.</p>
-          </div>
-          <div className="overflow-x-auto -mx-6">
-            <div className="inline-block min-w-full align-middle px-6">
-              <table className="w-full min-w-[500px] text-left text-sm border-collapse">
-                <thead>
-                  <tr className="border-b border-[#ECE8E2] pb-2">
-                    <th className="folio-label text-[9px] uppercase tracking-[0.18em] text-[#6D6B8D] pb-2 font-bold">Candidate</th>
-                    <th className="folio-label text-[9px] uppercase tracking-[0.18em] text-[#6D6B8D] pb-2 font-bold">Role</th>
-                    <th className="folio-label text-[9px] uppercase tracking-[0.18em] text-[#6D6B8D] pb-2 font-bold">Source</th>
-                    <th className="folio-label text-[9px] uppercase tracking-[0.18em] text-[#6D6B8D] pb-2 font-bold">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#ECE8E2]">
-                  {candidates.slice(0, 5).map((candidate) => (
-                    <tr key={candidate.id} className="hover:bg-[#151633]/[0.02] transition-colors cursor-pointer" onClick={() => navigate('/pipeline')}>
-                      <td className="py-2.5 font-sans font-bold text-brand-navy text-[13.5px]">
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-navy text-white text-[10px] font-sans font-bold flex-shrink-0">
-                            {candidate.name.charAt(0)}
-                          </div>
-                          <span>{candidate.name}</span>
-                        </div>
-                      </td>
-                      <td className="py-2.5 text-[#6D6B8D]/90 font-sans text-[12.5px]">{candidate.jobTitle}</td>
-                      <td className="py-2.5 text-[#6D6B8D]/90 font-sans text-[12.5px]">{candidate.source}</td>
-                      <td className="py-2.5"><StatusBadge value={candidate.status} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* Right: Top Matched Candidates */}
+      {/* Optimized Top Matches Section taking up full width */}
+      <section className="w-full">
         <div className="rounded-2xl border border-stone-200/60 bg-white p-6 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="mb-4 border-b border-[#ECE8E2] pb-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-[20px] font-bold text-brand-navy" style={labelFontStyle}>Top Matches</h2>
-                <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Best fitting profiles in pool.</p>
-              </div>
-            </div>
-            <div className="space-y-3.5">
-              {topMatchedCandidates.map((candidate, idx) => (
-                <div 
-                  key={candidate.id} 
-                  className="rounded-xl border border-[#ECE8E2] bg-white p-3.5 hover:border-brand-purple hover:translate-y-[-1px] transition-all duration-200 shadow-sm cursor-pointer"
-                  onClick={() => navigate('/pipeline')}
-                >
-                  <div className="flex items-center justify-between gap-2.5">
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-5 h-5 flex items-center justify-center rounded-full bg-brand-purple/10 text-brand-purple font-mono text-[10px] font-bold">
-                        {idx + 1}
-                      </span>
-                      <div>
-                        <h4 className="font-sans font-bold text-brand-navy text-[13px] leading-tight">{candidate.name}</h4>
-                        <p className="text-[10px] text-[#6D6B8D] mt-0.5 font-sans">{candidate.jobTitle}</p>
-                      </div>
+          <div className="mb-4 border-b border-[#ECE8E2] pb-4">
+            <h2 className="text-[20px] font-bold text-brand-navy" style={labelFontStyle}>Top Matches</h2>
+            <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Best fitting profiles in pool.</p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {topMatchedCandidates.map((candidate, idx) => (
+              <div 
+                key={candidate.id} 
+                className="rounded-xl border border-[#ECE8E2] bg-white p-3.5 hover:border-brand-purple hover:translate-y-[-1px] transition-all duration-200 shadow-xs cursor-pointer"
+                onClick={() => navigate('/pipeline')}
+              >
+                <div className="flex items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-5 h-5 flex items-center justify-center rounded-full bg-brand-purple/10 text-brand-purple font-mono text-[10px] font-bold">
+                      {idx + 1}
+                    </span>
+                    <div>
+                      <h4 className="font-sans font-bold text-brand-navy text-[13px] leading-tight">{candidate.name}</h4>
+                      <p className="text-[10px] text-[#6D6B8D] mt-0.5 font-sans">{candidate.jobTitle}</p>
                     </div>
-                    <span className="folio-mono text-[9px] font-bold text-brand-mint bg-brand-mint/5 px-2 py-0.5 rounded border border-brand-mint/10 flex-shrink-0">
-                      {candidate.matchScore}%
+                  </div>
+                  <span className="folio-mono text-[9px] font-bold text-brand-mint bg-brand-mint/5 px-2 py-0.5 rounded border border-brand-mint/10 flex-shrink-0">
+                    {candidate.matchScore}%
+                  </span>
+                </div>
+
+                {/* Skills tags */}
+                {candidate.skills && candidate.skills.length > 0 && (
+                  <div className="mt-2.5 flex flex-wrap gap-1 ml-7">
+                    {candidate.skills.slice(0, 2).map((skill, idx) => (
+                      <span key={idx} className="text-[8.5px] font-mono text-stone-500 bg-stone-50 border border-stone-200/60 px-1.5 py-0.5 rounded">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* AI Recommendation tag */}
+                {candidate.matchScore >= 85 && (
+                  <div className="mt-2.5 ml-7 inline-flex items-center gap-1 rounded bg-brand-purple/5 border border-brand-purple/10 px-1.5 py-0.5 w-fit">
+                    <span className="h-1 w-1 rounded-full bg-brand-purple animate-ping" />
+                    <span className="folio-mono text-[6.5px] uppercase tracking-wider text-brand-purple font-bold">
+                      AI RECOMMEND
                     </span>
                   </div>
-
-                  {/* Skills tags */}
-                  {candidate.skills && candidate.skills.length > 0 && (
-                    <div className="mt-2.5 flex flex-wrap gap-1 ml-7">
-                      {candidate.skills.slice(0, 2).map((skill, idx) => (
-                        <span key={idx} className="text-[8.5px] font-mono text-stone-500 bg-stone-50 border border-stone-200/60 px-1.5 py-0.5 rounded">
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* AI Recommendation tag */}
-                  {candidate.matchScore >= 85 && (
-                    <div className="mt-2.5 ml-7 inline-flex items-center gap-1 rounded bg-brand-purple/5 border border-brand-purple/10 px-1.5 py-0.5">
-                      <span className="h-1 w-1 rounded-full bg-brand-purple animate-ping" />
-                      <span className="folio-mono text-[6.5px] uppercase tracking-wider text-brand-purple font-bold">
-                        AI RECOMMEND
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Recruiter Profile Modal */}
       <RecruiterProfileModal 
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
+        isOpen={showProfileModal} 
+        onClose={() => setShowProfileModal(false)} 
       />
     </div>
   );

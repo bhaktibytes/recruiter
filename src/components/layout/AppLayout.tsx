@@ -60,6 +60,13 @@ export default function AppLayout() {
 
   const labelFontStyle = { fontFamily: '"DM Sans", system-ui, sans-serif' };
 
+  const allowedNavItems = navItems.filter((item) => {
+    if (item.to === '/admin') {
+      return user?.role === 'Admin';
+    }
+    return true;
+  });
+
   return (
     <div className="min-h-screen bg-[#F2EFEA] text-brand-navy font-sans antialiased">
       {/* Desktop Sidebar (Figma Proportions: 225px width) */}
@@ -90,7 +97,7 @@ export default function AppLayout() {
 
           {/* Navigation links */}
           <nav className="mt-6 flex flex-col gap-1">
-            {navItems.map(({ to, label, icon: Icon }) => (
+            {allowedNavItems.map(({ to, label, icon: Icon }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -288,7 +295,7 @@ export default function AppLayout() {
         <main className="px-8 py-6">
           {/* Mobile responsive navigation toolbar */}
           <div className="mb-4 flex gap-1.5 overflow-x-auto pb-1.5 lg:hidden scrollbar-none">
-            {navItems.map(({ to, label }) => (
+            {allowedNavItems.map(({ to, label }) => (
               <NavLink
                 key={to}
                 to={to}

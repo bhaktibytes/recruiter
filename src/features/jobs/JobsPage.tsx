@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Search, AlertTriangle, Sparkles, ArrowLeft, ChevronDown } from 'lucide-react';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useCollection } from '@/hooks/useCollection';
@@ -8,28 +8,195 @@ type JobForm = Omit<Job, 'id' | 'applicantsCount' | 'createdAt'>;
 
 const initialForm: JobForm = {
   title: '',
+  category: 'Engineering',
   department: 'Engineering',
   location: 'Bengaluru',
+  workMode: 'Hybrid',
   type: 'Full-time',
   status: 'Draft',
   hiringManager: '',
   priority: 'Medium',
+
+  experienceRequired: '1-3 years',
+  salaryRange: '',
+  keyResponsibilities: '',
+  requiredSkills: [],
+  educationalQualifications: '',
+  numberOfOpenings: 1,
+  applicationDeadline: '',
+
   targetDate: '2026-07-31',
   description: '',
+
   experienceLevel: 'Mid-level',
-  salaryRange: '',
-  requiredSkills: [],
+  keywords: [],
   certifications: '',
-  requirementsWeights: { Creativity: 20, Leadership: 20, Teamwork: 20, Communication: 20, 'Problem Solving': 20 }
+  requirementsWeights: {
+    Creativity: 20,
+    Leadership: 20,
+    Teamwork: 20,
+    Communication: 20,
+    'Problem Solving': 20,
+  },
 };
 
+
 const skillsList = ['Creativity', 'Leadership', 'Teamwork', 'Communication', 'Problem Solving'];
+
+const titleSuggestionsMap: Record<string, string[]> = {
+  developer: ['Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'React Developer'],
+  dev: ['Frontend Developer', 'Backend Developer', 'Full Stack Developer', 'React Developer'],
+  engineer: ['Software Engineer', 'React Engineer', 'Cloud Engineer', 'DevOps Engineer'],
+  eng: ['Software Engineer', 'React Engineer', 'Cloud Engineer', 'DevOps Engineer'],
+  designer: ['UI/UX Designer', 'Product Designer', 'Visual Designer', 'Graphic Designer'],
+  des: ['UI/UX Designer', 'Product Designer', 'Visual Designer', 'Graphic Designer'],
+  analyst: ['Data Analyst', 'Business Analyst', 'Systems Analyst', 'Financial Analyst'],
+  ana: ['Data Analyst', 'Business Analyst', 'Systems Analyst', 'Financial Analyst'],
+  manager: ['Product Manager', 'Project Manager', 'Engineering Manager', 'Hiring Manager'],
+  man: ['Product Manager', 'Project Manager', 'Engineering Manager', 'Hiring Manager']
+};
+
+const cleanCommaString = (input: string, toLowercase = false): string[] => {
+  return input
+    .split(',')
+    .map((s) => s.trim())
+    .map((s) => (toLowercase ? s.toLowerCase() : s))
+    .filter((val, idx, arr) => val !== '' && arr.indexOf(val) === idx);
+};
+
+const normalizeKeywords = (input: string): string[] => {
+  return cleanCommaString(input, true);
+};
+
+const normalizeSkills = (input: string): string[] => {
+  return cleanCommaString(input, false);
+};
+
+const getTopWeights = (weightsRecord?: Record<string, number>) => {
+  const defaultWeights = { Creativity: 20, Leadership: 20, Teamwork: 20, Communication: 20, 'Problem Solving': 20 };
+  const w = weightsRecord || defaultWeights;
+  return Object.entries(w)
+    .filter(([_, val]) => val > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+};
+
+const getAIInsights = (job: Job) => {
+  const insights: string[] = [];
+  const desc = (job.description || '').toLowerCase();
+  const skills = (job.requiredSkills || []).map((s) => s.toLowerCase());
+  const weights = job.requirementsWeights || {};
+
+  if (desc.includes('react') || skills.includes('react')) {
+    insights.push('Strong React requirement');
+  }
+  if (!job.salaryRange) {
+    insights.push('Missing salary details');
+  }
+  if (weights.Leadership && weights.Leadership > 25) {
+    insights.push('Leadership weighted heavily');
+  }
+  const keywordsCount = (job.keywords || []).length;
+  if (desc.length > 300 && keywordsCount >= 3) {
+    insights.push('Good search visibility');
+  } else {
+    insights.push('Low search visibility - add keywords/details');
+  }
+  if (job.experienceLevel === 'Senior' || job.experienceLevel === 'Lead') {
+    insights.push('Senior leadership position');
+  }
+  if (job.priority === 'Critical') {
+    insights.push('Urgent requisition fulfillment');
+  }
+  return insights;
+};
+
+const analyzeJD = (
+  desc: string,
+  skillsText: string,
+  salaryRange: string,
+  experienceLevel: string,
+  certifications: string,
+  title: string,
+  keywordsText: string
+) => {
+  const suggestions: string[] = [];
+  let score = 100;
+
+  const trimmedDesc = desc.trim();
+  if (trimmedDesc.length === 0) {
+    score -= 30;
+    suggestions.push('Job description is empty. Please add candidate responsibilities.');
+  } else if (trimmedDesc.length < 150) {
+    score -= 20;
+    suggestions.push('Job description is too short (min 150 chars).');
+  } else if (trimmedDesc.length < 300) {
+    score -= 10;
+    suggestions.push('Extend the job description to explain candidate responsibilities (min 300 chars).');
+  }
+
+  const skillsCount = skillsText.split(',').map((s) => s.trim()).filter(Boolean).length;
+  if (skillsCount === 0) {
+    score -= 15;
+    suggestions.push('Add required skills to target qualified applicants.');
+  } else if (skillsCount < 3) {
+    score -= 10;
+    suggestions.push('Specify at least 3 required skills/tools for better matching.');
+  }
+
+  const keywordsCount = keywordsText.split(',').map((k) => k.trim()).filter(Boolean).length;
+  if (keywordsCount === 0) {
+    score -= 10;
+    suggestions.push('Incorporate industry-standard keywords to increase searchability.');
+  }
+
+  if (!salaryRange.trim()) {
+    score -= 10;
+    suggestions.push('Specify a salary range to increase applicant response rate.');
+  }
+  if (!experienceLevel) {
+    score -= 10;
+    suggestions.push('Specify a target experience level.');
+  }
+  if (!certifications.trim()) {
+    score -= 5;
+    suggestions.push('Mention target certifications if applicable.');
+  }
+
+  const genericTitles = ['developer', 'engineer', 'designer', 'analyst', 'manager', 'lead', 'intern', 'consultant'];
+  if (genericTitles.includes(title.trim().toLowerCase())) {
+    score -= 15;
+    suggestions.push("Avoid generic titles. Be specific (e.g., 'React Developer' instead of 'Developer').");
+  }
+
+  const words = trimmedDesc.toLowerCase().match(/\b[a-z]{4,}\b/g) || [];
+  const wordCounts: Record<string, number> = {};
+  words.forEach((w) => {
+    wordCounts[w] = (wordCounts[w] || 0) + 1;
+  });
+  const repeated = Object.entries(wordCounts).filter(([_, count]) => count > 5);
+  if (repeated.length > 0) {
+    score -= 10;
+    const wordList = repeated.slice(0, 3).map(([w]) => `"${w}"`).join(', ');
+    suggestions.push(`Reduce word repetition for words like ${wordList} to improve description quality.`);
+  }
+
+  score = Math.max(0, Math.min(100, score));
+
+  let rating: 'Excellent' | 'Good' | 'Average' | 'Poor' = 'Poor';
+  if (score >= 85) rating = 'Excellent';
+  else if (score >= 70) rating = 'Good';
+  else if (score >= 50) rating = 'Average';
+
+  return { score, rating, suggestions };
+};
 
 export default function JobsPage() {
   const { items: jobs, addItem, updateItem } = useCollection<Job>('jobs');
   const [query, setQuery] = useState('');
   const [form, setForm] = useState<JobForm>(initialForm);
   const [skillsInput, setSkillsInput] = useState('');
+  const [keywordsInput, setKeywordsInput] = useState('');
   const [weights, setWeights] = useState<Record<string, number>>({
     Creativity: 20,
     Leadership: 20,
@@ -43,56 +210,32 @@ export default function JobsPage() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [viewMode, setViewMode] = useState<'create' | 'directory'>('create');
 
-  const filteredJobs = jobs.filter((job) => 
-    `${job.title} ${job.department} ${job.location}`.toLowerCase().includes(query.toLowerCase())
-  );
+  const filteredJobs = useMemo(() => {
+    const lowerQuery = query.toLowerCase().trim();
+    if (!lowerQuery) return jobs;
+    return jobs.filter((job) => {
+      const fields = [
+        job.title,
+        job.department,
+        job.location,
+        job.experienceLevel || '',
+        job.status,
+        job.hiringManager,
+        job.salaryRange || '',
+        job.certifications || '',
+        ...(job.keywords || []),
+        ...(job.requiredSkills || [])
+      ].map((f) => f.toLowerCase());
+      
+      return fields.some((f) => f.includes(lowerQuery));
+    });
+  }, [jobs, query]);
 
   const handleSliderChange = (changedSkill: string, newValue: number) => {
     setWeights((current) => ({
       ...current,
       [changedSkill]: newValue,
     }));
-  };
-
-  const analyzeJD = (desc: string, skillsText: string) => {
-    const suggestions: string[] = [];
-    let score = 0;
-    
-    if (desc.length > 150) {
-      score += 2;
-    } else if (desc.length > 50) {
-      score += 1;
-      suggestions.push("Extend the job description to explain candidate responsibilities (min 150 chars).");
-    } else {
-      suggestions.push("Job description is too short (min 150 chars).");
-    }
-
-    const skillsCount = skillsText.split(',').map(s => s.trim()).filter(Boolean).length;
-    if (skillsCount >= 3) {
-      score += 2;
-    } else if (skillsCount >= 1) {
-      score += 1;
-      suggestions.push("Specify at least 3 required skills/tools for better matching.");
-    } else {
-      suggestions.push("Add required skills to target qualified applicants.");
-    }
-
-    const keywords = ["react", "typescript", "design", "analytics", "sql", "sales", "experience", "development", "architecture", "figma"];
-    const matches = keywords.filter(kw => desc.toLowerCase().includes(kw));
-    if (matches.length >= 3) {
-      score += 2;
-    } else if (matches.length >= 1) {
-      score += 1;
-      suggestions.push("Enrich description with technical frameworks, tools, or department keywords.");
-    } else {
-      suggestions.push("Incorporate industry-standard keywords to increase searchability.");
-    }
-
-    let rating: 'Good' | 'Average' | 'Bad' = 'Bad';
-    if (score >= 5) rating = 'Good';
-    else if (score >= 3) rating = 'Average';
-
-    return { rating, suggestions };
   };
 
   const detectMismatch = (title: string, dept: string, desc: string) => {
@@ -123,17 +266,76 @@ export default function JobsPage() {
     return null;
   };
 
+  const titleSuggestions = useMemo(() => {
+    const lowercaseVal = form.title.trim().toLowerCase();
+    if (!lowercaseVal) return [];
+    for (const [key, suggestions] of Object.entries(titleSuggestionsMap)) {
+      if (key.includes(lowercaseVal) || lowercaseVal.includes(key)) {
+        return suggestions.filter((s) => s.toLowerCase() !== lowercaseVal);
+      }
+    }
+    return [];
+  }, [form.title]);
+
+  const hasDuplicateWarning = useMemo(() => {
+    if (!form.title.trim() || !form.department.trim() || !form.location.trim()) return false;
+    return jobs.some((j) => 
+      j.title.trim().toLowerCase() === form.title.trim().toLowerCase() &&
+      j.department.trim().toLowerCase() === form.department.trim().toLowerCase() &&
+      j.location.trim().toLowerCase() === form.location.trim().toLowerCase()
+    );
+  }, [form.title, form.department, form.location, jobs]);
+
+  const getCurrentErrors = (f: JobForm, req: { skillsText: string; keywordsText: string; w: Record<string, number> }) => {
+    const now = new Date().toISOString().slice(0, 10);
+
+    const next: Record<string, string> = {};
+
+    // Mandatory fields (as per request)
+    if (!f.title.trim()) next.title = 'Job Title is required.';
+
+    if (!f.category) next.category = 'Job Category is required.';
+
+    if (!f.type) next.type = 'Employment Type is required.';
+
+    if (!f.workMode) next.workMode = 'Work Mode is required.';
+
+    if (!f.location.trim()) next.location = 'Location is required.';
+
+    if (!f.experienceRequired?.trim()) next.experienceRequired = 'Experience Required is required.';
+
+    if (!f.salaryRange?.trim()) next.salaryRange = 'Salary Range is required.';
+
+    if (!f.keyResponsibilities?.trim()) next.keyResponsibilities = 'Key Responsibilities are required.';
+
+    const finalSkills = normalizeSkills(req.skillsText);
+    if (finalSkills.length === 0) next.requiredSkills = 'Required Skills are required (add at least 1 skill).';
+
+    if (!f.educationalQualifications?.trim()) next.educationalQualifications = 'Educational Qualifications are required.';
+
+    if (!Number.isFinite(f.numberOfOpenings) || f.numberOfOpenings <= 0) {
+      next.numberOfOpenings = 'Number of Openings must be greater than 0.';
+    }
+
+    if (!f.applicationDeadline?.trim()) next.applicationDeadline = 'Application Deadline is required.';
+    else if (f.applicationDeadline < now) next.applicationDeadline = 'Application Deadline cannot be in the past.';
+
+    // Existing validation kept
+    if (!f.hiringManager.trim()) next.hiringManager = 'Hiring Manager is required.';
+
+    // Target Date sanity check (kept from original)
+    if (f.targetDate < now) next.targetDate = 'Target Date cannot be in the past.';
+
+    return next;
+  };
+
+
+
+
   const createJob = async (event: React.FormEvent) => {
     event.preventDefault();
-    
-    const today = new Date().toISOString().slice(0, 10);
-    const newErrors: Record<string, string> = {};
 
-    if (!form.title.trim()) newErrors.title = "Job Title is required.";
-    if (!form.hiringManager.trim()) newErrors.hiringManager = "Hiring Manager is required.";
-    if (form.targetDate < today) {
-      newErrors.targetDate = "Target Date cannot be in the past.";
-    }
+    const newErrors = getCurrentErrors(form, { skillsText: skillsInput, keywordsText: keywordsInput, w: weights });
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -143,13 +345,16 @@ export default function JobsPage() {
     setErrors({});
     setIsSaving(true);
 
-    await new Promise(resolve => setTimeout(resolve, 10));
+    // Mock network latency to prevent duplicate submissions
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const finalSkills = skillsInput.split(',').map(s => s.trim()).filter(Boolean);
+    const finalSkills = normalizeSkills(skillsInput);
+    const finalKeywords = normalizeKeywords(keywordsInput);
 
     await addItem({
       ...form,
       requiredSkills: finalSkills,
+      keywords: finalKeywords,
       requirementsWeights: weights,
       applicantsCount: 0,
       createdAt: new Date().toISOString().slice(0, 10),
@@ -163,22 +368,37 @@ export default function JobsPage() {
 
     setForm(initialForm);
     setSkillsInput('');
+    setKeywordsInput('');
     setWeights({
       Creativity: 20,
       Leadership: 20,
       Teamwork: 20,
       Communication: 20,
-      'Problem Solving': 20
+      'Problem Solving': 20,
     });
     setIsSaving(false);
   };
 
+
   const mismatch = detectMismatch(form.title, form.department, form.description);
-  const jdAnalysis = analyzeJD(form.description, skillsInput);
+  
+  const jdAnalysis = useMemo(() => {
+    return analyzeJD(
+      form.description,
+      skillsInput,
+      form.salaryRange || '',
+      form.experienceLevel || '',
+      form.certifications || '',
+      form.title,
+      keywordsInput
+    );
+  }, [form.description, skillsInput, form.salaryRange, form.experienceLevel, form.certifications, form.title, keywordsInput]);
+
   const ratingColors = {
+    Excellent: 'text-brand-mint bg-brand-mint/5 border-brand-mint/15',
     Good: 'text-brand-mint bg-brand-mint/5 border-brand-mint/15',
     Average: 'text-brand-purple bg-brand-purple/5 border-brand-purple/15',
-    Bad: 'text-brand-orange bg-brand-orange/5 border-brand-orange/20',
+    Poor: 'text-brand-orange bg-brand-orange/5 border-brand-orange/20',
   };
 
   const labelFontStyle = { fontFamily: '"DM Sans", system-ui, sans-serif' };
@@ -245,6 +465,18 @@ export default function JobsPage() {
                 </div>
               )}
 
+              {hasDuplicateWarning && (
+                <div className="rounded-xl border border-brand-purple/20 bg-brand-purple/5 p-4 text-xs">
+                  <div className="flex items-center gap-1.5 font-bold text-brand-purple uppercase folio-mono mb-1.5">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    <span>Duplicate Warning</span>
+                  </div>
+                  <p className="text-stone-600 leading-relaxed">
+                    A job requisition with the same Title, Department, and Location already exists. You can still add this, but please verify if it is a duplicate.
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Job Title</label>
                 <input 
@@ -254,6 +486,23 @@ export default function JobsPage() {
                   placeholder="Senior React Engineer" 
                 />
                 {errors.title && <p className="mt-1 text-[10px] text-rose-500 font-medium font-sans">{errors.title}</p>}
+                
+                {titleSuggestions.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5 items-center transition duration-200">
+                    <span className="text-[10px] text-stone-400 font-sans" style={labelFontStyle}>Suggestions:</span>
+                    {titleSuggestions.map((sug) => (
+                      <button
+                        key={sug}
+                        type="button"
+                        onClick={() => setForm({ ...form, title: sug })}
+                        className="text-[9.5px] text-[#5B4FE9] bg-[#5B4FE9]/5 border border-[#5B4FE9]/10 px-2 py-0.5 rounded-full hover:bg-[#5B4FE9]/10 transition duration-200 cursor-pointer"
+                        style={labelFontStyle}
+                      >
+                        {sug}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               
               <div className="grid gap-4 sm:grid-cols-2">
@@ -337,14 +586,26 @@ export default function JobsPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Required Skills (Comma-separated)</label>
-                <input 
-                  className="input w-full" 
-                  value={skillsInput} 
-                  onChange={(event) => setSkillsInput(event.target.value)} 
-                  placeholder="React, TypeScript, CSS" 
-                />
+              <div className="space-y-4">
+                <div>
+                  <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Required Skills (Comma-separated)</label>
+                  <input 
+                    className="input w-full" 
+                    value={skillsInput} 
+                    onChange={(event) => setSkillsInput(event.target.value)} 
+                    placeholder="React, TypeScript, CSS" 
+                  />
+                </div>
+
+                <div>
+                  <label className="block folio-meta text-[#6D6B8D] mb-2 uppercase tracking-wide text-[12px] font-bold" style={labelFontStyle}>Keywords (Comma-separated)</label>
+                  <input 
+                    className="input w-full" 
+                    value={keywordsInput} 
+                    onChange={(event) => setKeywordsInput(event.target.value)} 
+                    placeholder="AI, React, Leadership, UI/UX" 
+                  />
+                </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
@@ -399,7 +660,7 @@ export default function JobsPage() {
                   <div className="flex items-center justify-between border-b border-[#ECE8E2] pb-2 mb-2">
                     <span className="folio-mono text-[9px] uppercase tracking-wider text-stone-500 font-bold flex items-center gap-1">
                       <Sparkles className="h-3 w-3 text-brand-purple" />
-                      JD Quality Analysis
+                      JD Quality Analysis ({jdAnalysis.score}%)
                     </span>
                     <span className={`folio-mono text-[9.5px] font-bold uppercase tracking-wider border px-2 py-0.5 rounded ${ratingColors[jdAnalysis.rating]}`}>
                       {jdAnalysis.rating} Quality
@@ -468,68 +729,131 @@ export default function JobsPage() {
                   <p className="mt-1 text-xs text-[#6D6B8D] max-w-xs">Try adjusting your search query or add a new job requisition.</p>
                 </div>
               ) : (
-                filteredJobs.map((job) => (
-                  /* Premium Styled Card Container based on image_074c79.png analysis */
-                  <article 
-                    key={job.id} 
-                    className="p-6 bg-white rounded-2xl border border-stone-200/60 shadow-xs hover:border-brand-purple/30 hover:-translate-y-0.5 transition-all duration-300 ease-out flex flex-col justify-between w-full"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-4 w-full pb-4">
-                      <div className="space-y-1.5 flex-1 min-w-[260px] max-w-4xl">
-                        <div className="flex flex-wrap items-center gap-2.5">
-                          <h3 className="text-lg font-bold text-brand-navy tracking-tight leading-none" style={labelFontStyle}>
-                            {job.title}
-                          </h3>
-                          <div className="flex gap-1.5 items-center flex-wrap">
-                            <StatusBadge value={job.status} />
-                            <StatusBadge value={job.priority} />
+                filteredJobs.map((job) => {
+                  const scoreDetails = analyzeJD(
+                    job.description || '',
+                    (job.requiredSkills || []).join(','),
+                    job.salaryRange || '',
+                    job.experienceLevel || '',
+                    job.certifications || '',
+                    job.title || '',
+                    (job.keywords || []).join(',')
+                  );
+                  
+                  const topWeights = getTopWeights(job.requirementsWeights);
+                  const aiInsights = getAIInsights(job);
+
+                  return (
+                    /* Premium Styled Card Container based on image_074c79.png analysis */
+                    <article 
+                      key={job.id} 
+                      className="p-6 bg-white rounded-2xl border border-stone-200/60 shadow-xs hover:border-brand-purple/30 hover:-translate-y-0.5 transition-all duration-300 ease-out flex flex-col justify-between w-full"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-4 w-full pb-4">
+                        <div className="space-y-1.5 flex-1 min-w-[260px] max-w-4xl">
+                          <div className="flex flex-wrap items-center gap-2.5">
+                            <h3 className="text-lg font-bold text-brand-navy tracking-tight leading-none" style={labelFontStyle}>
+                              {job.title}
+                            </h3>
+                            <div className="flex gap-1.5 items-center flex-wrap">
+                              <StatusBadge value={job.status} />
+                              <StatusBadge value={job.priority} />
+                              <span className={`text-[9.5px] font-mono font-bold uppercase tracking-wider border px-2 py-0.5 rounded-full ${ratingColors[scoreDetails.rating]}`}>
+                                JD: {scoreDetails.score}%
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-[13px] leading-relaxed text-[#6D6B8D] font-normal max-w-3xl">
+                            {job.description || "Manage requisition criteria, view incoming applicant matches, and control pipeline stages."}
+                          </p>
+                        </div>
+
+                        {/* Editorial Dropdown Control */}
+                        <div className="relative flex-shrink-0 w-full sm:w-auto">
+                          <select 
+                            className="appearance-none bg-white border border-stone-200 rounded-full pl-4 pr-9 py-1.5 text-[10px] font-mono tracking-wider uppercase text-brand-navy font-bold shadow-xs hover:bg-stone-50 transition cursor-pointer focus:outline-hidden focus:border-brand-purple/40 w-full sm:w-32" 
+                            value={job.status} 
+                            onChange={(event) => void updateItem(job.id, { status: event.target.value as Job['status'] })}
+                          >
+                            <option value="Active">Active</option>
+                            <option value="Draft">Draft</option>
+                            <option value="Closed">Closed</option>
+                            <option value="Archived">Archived</option>
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 text-[#6D6B8D] pointer-events-none" strokeWidth={2} />
+                        </div>
+                      </div>
+
+                      {/* Thin Editorial Section Divider Block */}
+                      <div className="w-full border-t border-[#ECE8E2]/60 my-1" />
+
+                      {/* Metadata Instrument Matrix Grid */}
+                      <div className="grid gap-4 grid-cols-2 sm:grid-cols-4 md:grid-cols-5 pt-4 w-full">
+                        <Field label="Department" value={job.department} />
+                        <Field label="Location" value={job.location} />
+                        <Field label="Applicants" value={job.applicantsCount.toString()} isMono={true} />
+                        <Field label="Hiring Manager" value={job.hiringManager} />
+                        {job.experienceLevel && <Field label="Experience" value={job.experienceLevel} />}
+                        {job.salaryRange && <Field label="Salary Range" value={job.salaryRange} />}
+                        {job.certifications && <Field label="Certifications" value={job.certifications} />}
+                      </div>
+
+                      {/* Requirement Summary Chips */}
+                      {topWeights.length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-1.5 items-center">
+                          <span className="text-[8.5px] font-mono font-bold uppercase tracking-[0.15em] text-[#6D6B8D]">Top Requirements:</span>
+                          {topWeights.map(([skill, val]) => (
+                            <span key={skill} className="text-[9px] font-mono font-medium text-brand-purple bg-brand-purple/5 border border-brand-purple/15 px-1.5 py-0.5 rounded">
+                              {skill} ({val}%)
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Skills Chips */}
+                      {job.requiredSkills && job.requiredSkills.length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-1.5 items-center">
+                          <span className="text-[8.5px] font-mono font-bold uppercase tracking-[0.15em] text-[#6D6B8D]">Skills:</span>
+                          {job.requiredSkills.map(skill => (
+                            <span key={skill} className="text-[9px] font-mono font-medium text-stone-500 bg-stone-50 border border-stone-200/60 px-1.5 py-0.5 rounded">
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Keywords Chips */}
+                      {job.keywords && job.keywords.length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-1.5 items-center">
+                          <span className="text-[8.5px] font-mono font-bold uppercase tracking-[0.15em] text-[#6D6B8D]">Keywords:</span>
+                          {job.keywords.map(keyword => (
+                            <span key={keyword} className="text-[9px] font-mono font-medium text-brand-purple bg-brand-purple/10 border border-brand-purple/20 px-2 py-0.5 rounded-full">
+                              {keyword}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* AI Insights widget */}
+                      {aiInsights.length > 0 && (
+                        <div className="mt-4 p-3 bg-stone-50/50 border border-stone-100 rounded-xl">
+                          <div className="flex items-center gap-1 mb-1.5">
+                            <Sparkles className="h-3 w-3 text-brand-purple" />
+                            <span className="text-[8.5px] font-mono font-bold uppercase tracking-[0.15em] text-[#6D6B8D]">AI Insights</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {aiInsights.map((insight, idx) => (
+                              <span key={idx} className="text-[9.5px] font-sans font-medium text-stone-600 bg-white border border-stone-200/65 px-2 py-0.5 rounded-md flex items-center gap-1 shadow-xs">
+                                <span className="h-1.5 w-1.5 rounded-full bg-[#5B4FE9]"></span>
+                                {insight}
+                              </span>
+                            ))}
                           </div>
                         </div>
-                        <p className="text-[13px] leading-relaxed text-[#6D6B8D] font-normal max-w-3xl">
-                          {job.description || "Manage requisition criteria, view incoming applicant matches, and control pipeline stages."}
-                        </p>
-                      </div>
-
-                      {/* Editorial Dropdown Control */}
-                      <div className="relative flex-shrink-0 w-full sm:w-auto">
-                        <select 
-                          className="appearance-none bg-white border border-stone-200 rounded-full pl-4 pr-9 py-1.5 text-[10px] font-mono tracking-wider uppercase text-brand-navy font-bold shadow-xs hover:bg-stone-50 transition cursor-pointer focus:outline-hidden focus:border-brand-purple/40 w-full sm:w-32" 
-                          value={job.status} 
-                          onChange={(event) => void updateItem(job.id, { status: event.target.value as Job['status'] })}
-                        >
-                          <option value="Active">Active</option>
-                          <option value="Draft">Draft</option>
-                          <option value="Closed">Closed</option>
-                          <option value="Archived">Archived</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 text-[#6D6B8D] pointer-events-none" strokeWidth={2} />
-                      </div>
-                    </div>
-
-                    {/* Thin Editorial Section Divider Block */}
-                    <div className="w-full border-t border-[#ECE8E2]/60 my-1" />
-
-                    {/* Metadata Instrument Matrix Grid */}
-                    <div className="grid gap-4 grid-cols-2 sm:grid-cols-4 md:grid-cols-5 pt-4 w-full">
-                      <Field label="Department" value={job.department} />
-                      <Field label="Location" value={job.location} />
-                      <Field label="Applicants" value={job.applicantsCount.toString()} isMono={true} />
-                      <Field label="Hiring Manager" value={job.hiringManager} />
-                      {job.experienceLevel && <Field label="Experience" value={job.experienceLevel} />}
-                    </div>
-
-                    {job.requiredSkills && job.requiredSkills.length > 0 && (
-                      <div className="mt-4 flex flex-wrap gap-1.5 items-center">
-                        <span className="text-[8.5px] font-mono font-bold uppercase tracking-[0.15em] text-[#6D6B8D]">Skills:</span>
-                        {job.requiredSkills.map(skill => (
-                          <span key={skill} className="text-[9px] font-mono font-medium text-stone-500 bg-stone-50 border border-stone-200/60 px-1.5 py-0.5 rounded">
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </article>
-                ))
+                      )}
+                    </article>
+                  );
+                })
               )}
             </div>
           </div>

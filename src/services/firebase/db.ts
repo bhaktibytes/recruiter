@@ -2,7 +2,7 @@ import { seedCampusDrives, seedCandidates, seedInterviews, seedJobs, seedNotific
 import { addDoc, collection, deleteDoc, doc, getDocs, setDoc } from 'firebase/firestore';
 import { firestore, hasFirebaseConfig } from '@/services/firebase/app';
 
-type CollectionName = 'jobs' | 'candidates' | 'interviews' | 'campusDrives' | 'notifications';
+type CollectionName = 'jobs' | 'candidates' | 'interviews' | 'campusDrives' | 'notifications' | 'recruiterProfiles';
 
 const seedData: Record<CollectionName, unknown[]> = {
   jobs: seedJobs,
@@ -10,6 +10,7 @@ const seedData: Record<CollectionName, unknown[]> = {
   interviews: seedInterviews,
   campusDrives: seedCampusDrives,
   notifications: seedNotifications,
+  recruiterProfiles: [],
 };
 
 const storageKey = (key: string) => `recruiter_app_${key}`;

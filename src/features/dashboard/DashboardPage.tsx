@@ -1,16 +1,21 @@
 import { Activity, BriefcaseBusiness, CalendarClock, CheckCircle2, UsersRound, Send, ArrowUpRight, Plus, Layers } from 'lucide-react';
-import type { ElementType } from 'react';
+import { ElementType, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import HiringFunnelChart from '@/components/charts/HiringFunnelChart';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useCollection } from '@/hooks/useCollection';
+import { useAuth } from '@/contexts/useAuth';
+import RecruiterProfileModal from '@/features/recruiter/RecruiterProfileModal';
 import type { Candidate, Interview, Job } from '@/types';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const { user, recruiterProfile } = useAuth();
   const { items: jobs } = useCollection<Job>('jobs');
   const { items: candidates } = useCollection<Candidate>('candidates');
   const { items: interviews } = useCollection<Interview>('interviews');
+  
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Dynamic calculations
   const activeJobs = jobs.filter((job) => job.status === 'Active').length;
@@ -32,6 +37,52 @@ export default function DashboardPage() {
 
   const labelFontStyle = { fontFamily: '"DM Sans", system-ui, sans-serif' };
 
+  // Calculate profile completion percentage based on 13 fields from recruiter onboarding
+  const profileCompletion = useMemo(() => {
+    if (!recruiterProfile) return { percentage: 0, nextAction: 'Complete Recruiter Profile' };
+    
+    const requiredFields = [
+      recruiterProfile.fullName,
+      recruiterProfile.designation,
+      recruiterProfile.email,
+      recruiterProfile.phoneNumber,
+      recruiterProfile.companyName,
+      recruiterProfile.companyWebsite,
+      recruiterProfile.industry,
+      recruiterProfile.companySize,
+      recruiterProfile.officeLocation,
+      recruiterProfile.hiringDepartments,
+      recruiterProfile.preferredLocations
+    ];
+    
+    const optionalFields = [
+      recruiterProfile.companyLogo,
+      recruiterProfile.linkedinUrl
+    ];
+    
+    const completedRequired = requiredFields.filter(f => {
+      if (Array.isArray(f)) return f.length > 0;
+      return f && f.toString().trim() !== '';
+    }).length;
+    
+    const completedOptional = optionalFields.filter(f => f && f.toString().trim() !== '').length;
+    
+    const total = requiredFields.length + optionalFields.length;
+    const completed = completedRequired + completedOptional;
+    const percentage = Math.round((completed / total) * 100);
+    
+    let nextAction = 'Profile is 100% complete!';
+    if (!recruiterProfile.companyName || !recruiterProfile.companyWebsite || !recruiterProfile.industry || !recruiterProfile.companySize) {
+      nextAction = 'Complete Company Profile';
+    } else if (!recruiterProfile.officeLocation || !recruiterProfile.hiringDepartments || !recruiterProfile.preferredLocations) {
+      nextAction = 'Complete Hiring Preferences';
+    } else if (!recruiterProfile.companyLogo || !recruiterProfile.linkedinUrl) {
+      nextAction = 'Add Logo & Social links';
+    }
+    
+    return { percentage, nextAction };
+  }, [recruiterProfile]);
+
   return (
      <div className="space-y-6 w-full mx-auto animate-slide-up will-change-transform">
       {/* Page Header - Premium Editorial Command Center */}
@@ -51,7 +102,7 @@ export default function DashboardPage() {
           <span className="bg-white border border-[#ECE8E2] rounded-lg px-2.5 py-1.5 shadow-sm font-bold">{activeJobs} <span className="text-[#6D6B8D]/70 font-normal">Active Requisitions</span></span>
         </div>
 
-        {/* Recruiter Quick Actions Bar - Updated to fully reflect the blueprint from WhatsApp Image 2026-06-27 at 5.02.11 PM.jpeg */}
+        {/* Recruiter Quick Actions Bar */}
         <div className="flex flex-wrap gap-2.5 mt-7">
           <button 
             onClick={() => navigate('/jobs')} 
@@ -83,7 +134,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Metrics Grid - Rebuilt with active navigation */}
+      {/* Metrics Grid */}
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Metric 
           icon={BriefcaseBusiness} 
@@ -123,7 +174,7 @@ export default function DashboardPage() {
         />
       </section>
 
-      {/* Analytics & Priority Requisitions Grid - Restored to Previous Funnel layout setup */}
+      {/* Analytics & Priority Requisitions Grid */}
       <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         {/* Hiring Funnel Card */}
         <div className="rounded-2xl border border-stone-200/60 bg-white p-6 flex flex-col justify-between shadow-sm">
@@ -161,44 +212,105 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Priority Requisitions Card - Original Version Restored */}
-        <div className="rounded-2xl border border-stone-200/60 bg-white p-6 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="mb-4 border-b border-[#ECE8E2] pb-4">
-              <h2 className="text-[20px] font-bold text-brand-navy" style={labelFontStyle}>Priority Requisitions</h2>
-              <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Open roles requiring immediate sourcing.</p>
-            </div>
-            <div className="space-y-3.5">
-              {jobs.slice(0, 3).map((job) => (
-                <div key={job.id} className="rounded-xl border border-[#ECE8E2] bg-white p-4 hover:border-brand-purple transition-all duration-300 card-hover">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-sans font-bold text-brand-navy text-sm leading-tight">{job.title}</h3>
-                      <p className="mt-0.5 text-[11px] text-[#6D6B8D] font-sans">{job.department} · {job.location}</p>
-                    </div>
-                    <div className="flex gap-1.5 flex-wrap">
-                      <StatusBadge value={job.priority} />
-                      <StatusBadge value={job.status} />
-                    </div>
+        {/* Right Column: Profile completion (if recruiter) and Priority Requisitions */}
+        <div className="space-y-6 flex flex-col justify-start">
+          {user?.role === 'Recruiter' && (
+            <div className="rounded-2xl border border-stone-200/60 bg-white p-6 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="mb-4 border-b border-[#ECE8E2] pb-4">
+                  <h2 className="text-[20px] font-bold text-brand-navy" style={labelFontStyle}>Profile completion</h2>
+                  <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Keep your recruiter workspace updated.</p>
+                </div>
+                
+                <div className="flex items-center gap-5 mt-4 mb-6">
+                  {/* SVG Circle Progress Bar */}
+                  <div className="relative flex items-center justify-center flex-shrink-0">
+                    <svg className="w-16 h-16 transform -rotate-90">
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="26"
+                        className="text-stone-100"
+                        strokeWidth="5.5"
+                        stroke="currentColor"
+                        fill="transparent"
+                      />
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="26"
+                        className="text-[#5B4FE9] transition-all duration-300"
+                        strokeWidth="5.5"
+                        strokeDasharray={2 * Math.PI * 26}
+                        strokeDashoffset={2 * Math.PI * 26 - (profileCompletion.percentage / 100) * (2 * Math.PI * 26)}
+                        strokeLinecap="round"
+                        stroke="currentColor"
+                        fill="transparent"
+                      />
+                    </svg>
+                    <span className="absolute text-xs font-mono font-bold text-[#151633]">
+                      {profileCompletion.percentage}%
+                    </span>
                   </div>
-                  
-                  {/* Rich metadata display (Days remaining & hiring velocity) */}
-                  <div className="mt-4 pt-2.5 border-t border-[#ECE8E2] grid grid-cols-3 gap-2 text-[10px]">
-                    <div>
-                      <div className="folio-label text-[8px] uppercase tracking-[0.15em] text-[#6D6B8D] font-bold mb-0.5">Sourcing</div>
-                      <div className="folio-mono font-bold text-brand-navy">{job.applicantsCount} Candidates</div>
-                    </div>
-                    <div>
-                      <div className="folio-label text-[8px] uppercase tracking-[0.15em] text-[#6D6B8D] font-bold mb-0.5">Timeline</div>
-                      <div className="folio-mono font-bold text-brand-orange">Target Date</div>
-                    </div>
-                    <div>
-                      <div className="folio-label text-[8px] uppercase tracking-[0.15em] text-[#6D6B8D] font-bold mb-0.5">Priority</div>
-                      <div className="folio-mono font-bold text-brand-purple">{job.priority}</div>
-                    </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-brand-navy" style={labelFontStyle}>
+                      {profileCompletion.percentage}% complete
+                    </h3>
+                    <p className="text-[11px] text-[#6D6B8D] mt-0.5 font-sans leading-relaxed">
+                      {profileCompletion.nextAction}
+                    </p>
                   </div>
                 </div>
-              ))}
+                
+                <button
+                  type="button"
+                  onClick={() => setShowProfileModal(true)}
+                  className="w-full rounded-xl border border-stone-200 py-2.5 text-center text-xs font-bold text-brand-navy hover:bg-stone-50 transition cursor-pointer bg-white"
+                  style={labelFontStyle}
+                >
+                  Complete profile
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="rounded-2xl border border-stone-200/60 bg-white p-6 shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="mb-4 border-b border-[#ECE8E2] pb-4">
+                <h2 className="text-[20px] font-bold text-brand-navy" style={labelFontStyle}>Priority Requisitions</h2>
+                <p className="text-[10.5px] mt-0.5 folio-meta text-[#6D6B8D] uppercase">Open roles requiring immediate sourcing.</p>
+              </div>
+              <div className="space-y-3.5">
+                {jobs.slice(0, 3).map((job) => (
+                  <div key={job.id} className="rounded-xl border border-[#ECE8E2] bg-white p-4 hover:border-brand-purple transition-all duration-300 card-hover">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-sans font-bold text-brand-navy text-sm leading-tight">{job.title}</h3>
+                        <p className="mt-0.5 text-[11px] text-[#6D6B8D] font-sans">{job.department} · {job.location}</p>
+                      </div>
+                      <div className="flex gap-1.5 flex-wrap">
+                        <StatusBadge value={job.priority} />
+                        <StatusBadge value={job.status} />
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 pt-2.5 border-t border-[#ECE8E2] grid grid-cols-3 gap-2 text-[10px]">
+                      <div>
+                        <div className="folio-label text-[8px] uppercase tracking-[0.15em] text-[#6D6B8D] font-bold mb-0.5">Sourcing</div>
+                        <div className="folio-mono font-bold text-brand-navy">{job.applicantsCount} Candidates</div>
+                      </div>
+                      <div>
+                        <div className="folio-label text-[8px] uppercase tracking-[0.15em] text-[#6D6B8D] font-bold mb-0.5">Timeline</div>
+                        <div className="folio-mono font-bold text-brand-orange">Target Date</div>
+                      </div>
+                      <div>
+                        <div className="folio-label text-[8px] uppercase tracking-[0.15em] text-[#6D6B8D] font-bold mb-0.5">Priority</div>
+                        <div className="folio-mono font-bold text-brand-purple">{job.priority}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -303,6 +415,12 @@ export default function DashboardPage() {
           </div>
         </div>
       </section>
+
+      {/* Recruiter Profile Modal */}
+      <RecruiterProfileModal 
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+      />
     </div>
   );
 }

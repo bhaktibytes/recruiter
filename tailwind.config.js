@@ -40,12 +40,32 @@ export default {
           900: '#0f172a',
         }
       },
+
       fontFamily: {
         sans: ['"DM Sans"', 'sans-serif'],
         serif: ['"DM Serif Display"', 'serif'],
         mono: ['"Space Mono"', 'monospace'],
-      }
+      },
+
+      // 👇 ADD THIS HERE
+      keyframes: {
+        slideUp: {
+          '0%': {
+            opacity: '0',
+            transform: 'translateY(40px) scale(0.95)',
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateY(0) scale(1)',
+          },
+        },
+      },
+
+      animation: {
+        'slide-up': 'slideUp 0.35s ease-out',
+      },
     },
   },
   plugins: [],
 }
+
